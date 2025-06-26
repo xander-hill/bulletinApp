@@ -1,7 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { useEvents } from '@/hooks/useEvents';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FilterType, useEvents } from '@/hooks/useEvents';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import EventCard from './EventCard';
+import FilterBar, { FilterOption } from './FilterBar';
 
 export default function EventFeed() {
   const { user, loading: authLoading } = useAuth();
@@ -15,30 +16,20 @@ export default function EventFeed() {
     setFilterType,
   } = useEvents(user?.id);
 
+  const filterOptions: FilterOption[] = [
+  { label: 'Upcoming', value: 'upcoming' },
+  { label: 'My Events', value: 'my' },
+  { label: 'RSVPed', value: 'rsvped' },
+];
+
   const renderHeader = () => (
     <View style={{ padding: 16 }}>
       <Text style={styles.title}>Welcome to Bulletin 🎉</Text>
-      <View style={styles.filterBar}>
-        {['upcoming', 'my', 'rsvped'].map((f) => (
-          <TouchableOpacity
-            key={f}
-            onPress={() => setFilterType(f as any)}
-            style={[
-              styles.filterButton,
-              filterType === f && styles.filterButtonActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                filterType === f && styles.filterTextActive,
-              ]}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <FilterBar
+        selected={filterType}
+        onChange={(val) => setFilterType(val as FilterType)}
+        options={filterOptions}
+      />
     </View>
   );
 

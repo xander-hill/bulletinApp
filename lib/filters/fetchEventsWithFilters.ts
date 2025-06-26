@@ -14,7 +14,6 @@ export async function fetchEventsWithFilters(filters: EventFilters, cursor?: str
       .neq('status', 'not_going');
 
     if (rsvpError) throw rsvpError;
-    console.log('🔍 RSVPs for user', filters.userId, ':', rsvps);
     const ids = rsvps?.map((r) => r.event_id) ?? [];
     if (ids.length === 0) return [];
 
