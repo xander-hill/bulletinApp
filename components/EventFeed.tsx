@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import EventCard from './EventCard';
 
 const PAGE_SIZE = 10;
 
@@ -277,7 +278,7 @@ export default function EventFeed() {
       <FlatList
         data={events}
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        renderItem={EventCard}
         onEndReached={fetchEvents}
         onEndReachedThreshold={0.4}
         ListHeaderComponent={renderHeader}
