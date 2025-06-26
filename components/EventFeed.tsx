@@ -1,9 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext'; // Adjust path as needed
 import { supabase } from '@/lib/supabase';
 import { Event } from '@/lib/types/event';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -25,8 +23,6 @@ export default function EventFeed() {
   const [filter, setFilter] = useState<'upcoming' | 'my' | 'rsvped'>('upcoming');
 
   const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
 
   const userId = user?.id ?? null;
 
@@ -259,19 +255,6 @@ export default function EventFeed() {
       channel.unsubscribe();
     };
   }, []);
-
-  const renderItem = ({ item }: { item: Event }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => router.push(`/event/${item.id}`)}
-    >
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.meta}>{item.location}</Text>
-      <Text style={styles.meta}>
-        {new Date(item.start_time).toLocaleString()}
-      </Text>
-    </TouchableOpacity>
-  );
 
   return (
     <View style={{ flex: 1 }}>
