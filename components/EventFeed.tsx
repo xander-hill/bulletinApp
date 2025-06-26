@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext'; // Adjust path as needed
 import { supabase } from '@/lib/supabase';
+import { Event } from '@/lib/types/event';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -14,18 +15,6 @@ import {
 } from 'react-native';
 
 const PAGE_SIZE = 10;
-
-type Event = {
-  id: string;
-  creator_id: string;
-  title: string;
-  description: string;
-  location_type: string;
-  location: string;
-  start_time: string;
-  tags: string[];
-  created_at: string;
-};
 
 export default function EventFeed() {
   const [events, setEvents] = useState<Event[]>([]);
