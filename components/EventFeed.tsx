@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext'; // Adjust path as needed
 import { supabase } from '@/lib/supabase';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -35,8 +36,42 @@ export default function EventFeed() {
 
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const userId = user?.id ?? null;
+
+  const renderHeader = () => (
+  <View style={{ padding: 16 }}>
+    <View style={{ padding: 16 }}>
+      <Text style={styles.title}>Welcome to Bulletin 🎉</Text>
+    </View>
+    <View style={styles.filterBar}>
+        {['upcoming', 'my', 'rsvped'].map((f) => (
+          <TouchableOpacity
+            key={f}
+            onPress={() => {
+              setFilter(f as any);
+              setEvents([]);
+              setHasMore(true);
+            }}
+            style={[
+              styles.filterButton,
+              filter === f && styles.filterButtonActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.filterText,
+                filter === f && styles.filterTextActive,
+              ]}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+  </View>
+);
 
   // Helper: build query for filters other than 'rsvped'
   const buildQuery = (cursor: string | null) => {
@@ -250,39 +285,13 @@ export default function EventFeed() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Simple filter buttons */}
-      <View style={styles.filterBar}>
-        {['upcoming', 'my', 'rsvped'].map((f) => (
-          <TouchableOpacity
-            key={f}
-            onPress={() => {
-              setFilter(f as any);
-              setEvents([]);
-              setHasMore(true);
-            }}
-            style={[
-              styles.filterButton,
-              filter === f && styles.filterButtonActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                filter === f && styles.filterTextActive,
-              ]}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       <FlatList
         data={events}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         onEndReached={fetchEvents}
         onEndReachedThreshold={0.4}
+        ListHeaderComponent={renderHeader}
         ListFooterComponent={loading ? <ActivityIndicator size="large" /> : null}
         contentContainerStyle={styles.container}
         refreshing={refreshing}
@@ -334,4 +343,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#777',
   },
+  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+  text: { fontSize: 16, textAlign: 'center', marginBottom: 24 },
 });
