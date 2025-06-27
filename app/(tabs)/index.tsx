@@ -6,7 +6,14 @@ export default function Home() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <EventFeed />
+      <EventFeed
+        headerTitle="Welcome to Bulletin 🎉"
+        filterOptions={[
+          { label: 'Upcoming', value: 'upcoming' },
+          { label: 'My Events', value: 'my' },
+          { label: 'RSVPed', value: 'rsvped' },
+        ]}
+      />
     </SafeAreaView>
   );
 }

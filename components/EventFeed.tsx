@@ -1,12 +1,17 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
-import { FilterOption } from '@/lib/types/filterOption';
+import { EventFeedProps } from '@/lib/types/eventFeedProps';
 import { FilterType } from '@/lib/types/filterType';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import EventCard from './EventCard';
 import FilterBar from './FilterBar';
 
-export default function EventFeed() {
+export default function EventFeed({
+  filterOptions = [],
+  headerTitle = "Events",
+  userId,
+  initialFilter,
+}: EventFeedProps) {
   const { user, loading: authLoading } = useAuth();
   const {
     events,
@@ -16,22 +21,21 @@ export default function EventFeed() {
     onRefresh,
     filterType,
     setFilterType,
-  } = useEvents(user?.id);
-
-  const filterOptions: FilterOption[] = [
-  { label: 'Upcoming', value: 'upcoming' },
-  { label: 'My Events', value: 'my' },
-  { label: 'RSVPed', value: 'rsvped' },
-];
+  } = useEvents({
+    userId: userId ?? user?.id,
+    initialFilter,
+  });
 
   const renderHeader = () => (
     <View style={{ padding: 16 }}>
-      <Text style={styles.title}>Welcome to Bulletin 🎉</Text>
-      <FilterBar
-        selected={filterType}
-        onChange={(val) => setFilterType(val as FilterType)}
-        options={filterOptions}
-      />
+      <Text style={styles.title}>{headerTitle}</Text>
+      {filterOptions.length > 0 && (
+        <FilterBar
+          selected={filterType}
+          onChange={(val) => setFilterType(val as FilterType)}
+          options={filterOptions}
+        />
+      )}
     </View>
   );
 
