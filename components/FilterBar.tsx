@@ -1,18 +1,7 @@
-// components/FilterBar.tsx
+import { FilterBarProps } from '@/lib/types/filterBarProps';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export type FilterOption = {
-  label: string;
-  value: string;
-};
-
-type Props = {
-  selected: string;
-  onChange: (value: string) => void;
-  options: FilterOption[];
-};
-
-export default function FilterBar({ selected, onChange, options }: Props) {
+export default function FilterBar({ selected, onChange, options }: FilterBarProps) {
   return (
     <View style={styles.container}>
       {options.map((option) => (

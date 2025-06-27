@@ -1,11 +1,10 @@
 // hooks/useEvents.ts
 import { fetchEventsWithFilters } from '@/lib/filters/fetchEventsWithFilters';
 import { Event } from '@/lib/types/event';
+import { FilterType } from '@/lib/types/filterType';
 import { useCallback, useEffect, useState } from 'react';
 
 const PAGE_SIZE = 10;
-
-export type FilterType = 'upcoming' | 'my' | 'rsvped';
 
 export function useEvents(userId?: string) {
   const [events, setEvents] = useState<Event[]>([]);

@@ -1,8 +1,4 @@
-// lib/filters/filterFns.ts
-
-import { EventFilters } from '../types/eventFilter';
-
-type FilterFn = (query: any, filters: EventFilters) => any;
+import { FilterFn } from '../types/filterFunction';
 
 export const simpleFilters: FilterFn[] = [
   (q, f) => (f.upcoming ? q.gte('start_time', new Date().toISOString()) : q),

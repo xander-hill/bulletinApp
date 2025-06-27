@@ -1,5 +1,3 @@
-// lib/filters/fetchEventsWithFilters.ts
-
 import { supabase } from '../supabase';
 import { Event } from '../types/event';
 import { EventFilters } from '../types/eventFilter';
@@ -27,7 +25,7 @@ export async function fetchEventsWithFilters(filters: EventFilters, cursor?: str
   }
 
   const query = buildEventQuery(filters);
-  if (cursor) query.lt('start_time', cursor); // adjust if sorting by created_at
+  if (cursor) query.lt('start_time', cursor); 
 
   const { data: eventsData, error } = await query;
   if (error) throw error;

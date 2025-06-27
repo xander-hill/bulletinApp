@@ -1,5 +1,3 @@
-// lib/filters/buildEventQuery.ts
-
 import { supabase } from '../supabase';
 import { EventFilters } from '../types/eventFilter';
 import { simpleFilters } from './filterFns';

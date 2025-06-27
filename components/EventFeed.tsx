@@ -1,8 +1,10 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { FilterType, useEvents } from '@/hooks/useEvents';
+import { useEvents } from '@/hooks/useEvents';
+import { FilterOption } from '@/lib/types/filterOption';
+import { FilterType } from '@/lib/types/filterType';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import EventCard from './EventCard';
-import FilterBar, { FilterOption } from './FilterBar';
+import FilterBar from './FilterBar';
 
 export default function EventFeed() {
   const { user, loading: authLoading } = useAuth();

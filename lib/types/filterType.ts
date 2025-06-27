@@ -1,0 +1,1 @@
+export type FilterType = 'upcoming' | 'my' | 'rsvped';
