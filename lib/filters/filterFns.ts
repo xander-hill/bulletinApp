@@ -10,7 +10,7 @@ export const simpleFilters: FilterFn[] = [
         )
       : q,
 
-  (q, f) => (f.tags?.length ? q.contains('tags', f.tags) : q),
+  (q, f) => (f.tags?.length ? q.overlaps('tags', f.tags) : q),
 
   (q, f) => (f.userId && !f.rsvped ? q.eq('creator_id', f.userId) : q),
 ];
