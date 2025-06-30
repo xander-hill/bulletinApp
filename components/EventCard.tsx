@@ -11,6 +11,7 @@ export default function EventCard({ item }: { item: Event}) {
       onPress={() => router.push(`/event/${item.id}`)}
     >
       <Text style={styles.title}>{item.title}</Text>
+      <Text>{item.rsvp_count} RSVPs</Text>
       <Text style={styles.meta}>{item.location}</Text>
       <Text style={styles.meta}>
         {new Date(item.start_time).toLocaleString()}

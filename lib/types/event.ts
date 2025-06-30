@@ -9,4 +9,5 @@ export type Event = {
   tags: string[];
   created_at: string;
   is_public: boolean;
+  rsvp_count: number;
 };

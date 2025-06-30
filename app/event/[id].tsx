@@ -171,7 +171,7 @@ export default function EventDetailScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>{event.title}</Text>
+        <Text style={styles.title}>{event.title}: {event.rsvp_count} RSVPs </Text>
 
         <Text style={styles.meta}>
           Hosted by: <Text style={styles.bold}>{event.creator?.username ?? "Unknown"}</Text>

@@ -3,7 +3,7 @@ import { EventFilters } from '../types/eventFilter';
 import { simpleFilters } from './filterFns';
 
 export function buildEventQuery(filters: EventFilters) {
-  let query = supabase.from('events').select('*');
+  let query = supabase.from('events_with_rsvp_counts').select('*');
 
   for (const apply of simpleFilters) {
     query = apply(query, filters);
@@ -14,6 +14,8 @@ export function buildEventQuery(filters: EventFilters) {
     query = query.order('created_at', { ascending: false });
   } else if (filters.sort === 'upcoming') {
     query = query.order('start_time', { ascending: true });
+  } else if (filters.sort === 'popular') {
+    query = query.order('rsvp_count', { ascending: false });
   } else {
     // fallback/default
     query = query.order('start_time', { ascending: true });
