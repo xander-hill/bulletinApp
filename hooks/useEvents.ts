@@ -3,16 +3,40 @@ import { fetchEventsWithFilters } from '@/lib/filters/fetchEventsWithFilters';
 import { Event } from '@/lib/types/event';
 import { FilterType } from '@/lib/types/filterType';
 import { UseEventsOptions } from '@/lib/types/useEventsOptions';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const PAGE_SIZE = 10;
 
-export function useEvents({ userId, initialFilter = 'upcoming', additionalFilters = {} }: UseEventsOptions = {}) {
+// helper to compare objects shallowly
+function shallowEqual(obj1: any, obj2: any) {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  if (keys1.length !== keys2.length) return false;
+  for (let key of keys1) {
+    if (obj1[key] !== obj2[key]) return false;
+  }
+  return true;
+}
+
+export function useEvents({
+  userId,
+  initialFilter = 'upcoming',
+  additionalFilters = {},
+}: UseEventsOptions = {}) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [filterType, setFilterType] = useState<FilterType>(initialFilter);
+
+  const filters = useMemo(() => ({
+    upcoming: filterType === 'upcoming',
+    userId,
+    rsvped: filterType === 'rsvped',
+    ...additionalFilters,
+  }), [filterType, userId, additionalFilters]);
+
+  const previousFilters = useRef(filters);
 
   const getCursor = () =>
     events.length > 0
@@ -22,16 +46,15 @@ export function useEvents({ userId, initialFilter = 'upcoming', additionalFilter
       : undefined;
 
   const fetchMore = useCallback(async () => {
-    if (loading || !hasMore) return;
+    if (loading || refreshing || !hasMore) return;
     if ((filterType === 'my' || filterType === 'rsvped') && !userId) return;
 
     setLoading(true);
     try {
       const newEvents = await fetchEventsWithFilters(filters, getCursor());
-
-      setEvents((prev) => {
-        const seen = new Set(prev.map((e) => e.id));
-        const unique = newEvents.filter((e) => !seen.has(e.id));
+      setEvents(prev => {
+        const seen = new Set(prev.map(e => e.id));
+        const unique = newEvents.filter(e => !seen.has(e.id));
         return [...prev, ...unique];
       });
 
@@ -43,14 +66,7 @@ export function useEvents({ userId, initialFilter = 'upcoming', additionalFilter
     } finally {
       setLoading(false);
     }
-  }, [hasMore, loading, filterType, userId, additionalFilters]);
-
-  const filters = useMemo(() => ({
-    upcoming: filterType === 'upcoming',
-    userId,
-    rsvped: filterType === 'rsvped',
-    ...additionalFilters,
-  }), [filterType, userId, additionalFilters]);
+  }, [loading, refreshing, hasMore, filterType, userId, filters]);
 
   const onRefresh = useCallback(async () => {
     if ((filterType === 'my' || filterType === 'rsvped') && !userId) return;
@@ -65,12 +81,14 @@ export function useEvents({ userId, initialFilter = 'upcoming', additionalFilter
     } finally {
       setRefreshing(false);
     }
-  }, [filters]);
+  }, [filterType, userId, filters]);
 
   useEffect(() => {
-    onRefresh();
-  }, [onRefresh]);
-
+    if (!shallowEqual(previousFilters.current, filters)) {
+      previousFilters.current = filters;
+      onRefresh();
+    }
+  }, [filters, onRefresh]);
 
   return {
     events,
@@ -83,3 +101,4 @@ export function useEvents({ userId, initialFilter = 'upcoming', additionalFilter
     setFilterType,
   };
 }
+

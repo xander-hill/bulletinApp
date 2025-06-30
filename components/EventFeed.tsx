@@ -2,9 +2,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { EventFeedProps } from '@/lib/types/eventFeedProps';
 import { FilterType } from '@/lib/types/filterType';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import EventCard from './EventCard';
-import FilterBar from './FilterBar';
+import FilterBar from './ProfileFilterBar';
 
 export default function EventFeed({
   filterOptions = [],
@@ -13,6 +14,16 @@ export default function EventFeed({
   initialFilter,
 }: EventFeedProps) {
   const { user, loading: authLoading } = useAuth();
+
+  // Example: Dynamic filter state (tags); extend with keyword, proximity, etc. similarly
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Memoize additionalFilters to avoid refetching on every render
+  const additionalFilters = useMemo(() => ({
+    tags: selectedTags.length > 0 ? selectedTags : undefined,
+    // keyword, proximity, popularity etc. can be added here
+  }), [selectedTags]);
+
   const {
     events,
     loading,
@@ -24,6 +35,7 @@ export default function EventFeed({
   } = useEvents({
     userId: userId ?? user?.id,
     initialFilter,
+    additionalFilters,
   });
 
   const renderHeader = () => (
@@ -36,6 +48,30 @@ export default function EventFeed({
           options={filterOptions}
         />
       )}
+
+      {/* Example UI for tag filtering */}
+      <View style={{ flexDirection: 'row', marginTop: 12, flexWrap: 'wrap' }}>
+        {['music', 'sports', 'tech', 'art'].map((tag) => {
+          const isSelected = selectedTags.includes(tag);
+          return (
+            <Text
+              key={tag}
+              onPress={() => {
+                setSelectedTags(prev =>
+                  isSelected ? prev.filter(t => t !== tag) : [...prev, tag]
+                );
+              }}
+              style={[
+                styles.filterButton,
+                isSelected && styles.filterButtonActive,
+                { marginRight: 8, marginBottom: 8 },
+              ]}
+            >
+              <Text style={isSelected ? styles.filterTextActive : styles.filterText}>{tag}</Text>
+            </Text>
+          );
+        })}
+      </View>
     </View>
   );
 
@@ -61,7 +97,6 @@ export default function EventFeed({
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: { paddingBottom: 16, backgroundColor: '#fff' },
@@ -103,3 +138,4 @@ const styles = StyleSheet.create({
   header: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
   text: { fontSize: 16, textAlign: 'center', marginBottom: 24 },
 });
+
