@@ -4,4 +4,5 @@ export type EventFilters = Partial<{
   upcoming: boolean;
   userId: string;
   rsvped: boolean;
+  sort: string;
 }>;

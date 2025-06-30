@@ -8,6 +8,16 @@ export function buildEventQuery(filters: EventFilters) {
   for (const apply of simpleFilters) {
     query = apply(query, filters);
   }
+  
+  // Sorting logic here
+  if (filters.sort === 'newest') {
+    query = query.order('created_at', { ascending: false });
+  } else if (filters.sort === 'upcoming') {
+    query = query.order('start_time', { ascending: true });
+  } else {
+    // fallback/default
+    query = query.order('start_time', { ascending: true });
+  }
 
-  return query.order('start_time', { ascending: true }).limit(10);
+  return query.limit(10);
 }
