@@ -6,7 +6,7 @@ export const simpleFilters: FilterFn[] = [
   (q, f) =>
     f.keyword
       ? q.or(
-          `title.ilike.%${f.keyword}%,description.ilike.%${f.keyword}%,location_name.ilike.%${f.keyword}%`
+          `title.ilike.%${f.keyword}%,description.ilike.%${f.keyword}%,location.ilike.%${f.keyword}%`
         )
       : q,
 
