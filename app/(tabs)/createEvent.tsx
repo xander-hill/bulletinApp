@@ -55,8 +55,9 @@ export default function CreateEventScreen({ navigation }: any) {
 
   const handleAddTag = () => {
     const trimmed = tagInput.trim();
-    if (trimmed && !tagsArray.includes(trimmed)) {
-      setTagsArray([...tagsArray, trimmed]);
+    const normalized = trimmed.toLowerCase();
+    if (normalized && !tagsArray.includes(normalized)) {
+      setTagsArray([...tagsArray, normalized]);
       setTagInput("");
     }
   };

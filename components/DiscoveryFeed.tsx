@@ -14,6 +14,8 @@ export default function DiscoveryFeed() {
     sort: sort || undefined,
   }), [selectedTags, keyword, sort]);
 
+  console.log(selectedTags);
+
   return (
     <View style={{ flex: 1 }}>
       <DiscoveryFilterBar
