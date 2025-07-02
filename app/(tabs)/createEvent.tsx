@@ -1,5 +1,6 @@
 import LabeledDatePicker from "@/components/LabeledDatePicker";
 import TagInput from "@/components/TagInput";
+import { CreateEventSchema } from "@/lib/validation/eventSchema";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from "expo-router";
@@ -20,18 +21,6 @@ import {
 } from "react-native";
 import { supabase } from "../../lib/supabase";
 
-
-interface CreateEventPayload {
-  title: string;
-  description: string;
-  location: string;
-  location_type: "physical" | "online";
-  start_time: string;
-  ends_at: string;
-  is_public: boolean;
-  tags: string[];
-}
-
 export default function CreateEventScreen({ navigation }: any) {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
@@ -43,7 +32,6 @@ export default function CreateEventScreen({ navigation }: any) {
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [endsAt, setEndsAt] = useState<Date>(new Date());
   const [tagsArray, setTagsArray] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -56,12 +44,7 @@ export default function CreateEventScreen({ navigation }: any) {
   };
 
   const handleCreateEvent = async () => {
-    if (!title || !description || !location) {
-      Alert.alert("Missing required fields");
-      return;
-    }
-
-    const payload: CreateEventPayload = {
+    const payload = {
       title,
       description,
       location,
@@ -71,6 +54,16 @@ export default function CreateEventScreen({ navigation }: any) {
       is_public: isPublic,
       tags: tagsArray,
     };
+
+    const parseResult = CreateEventSchema.safeParse(payload);
+
+    if (!parseResult.success) {
+      const errorMessages = parseResult.error.errors
+        .map((e) => `${e.path.join(".")}: ${e.message}`)
+        .join("\n");
+      Alert.alert("Validation Error", errorMessages);
+      return;
+    }
 
     setLoading(true);
 
@@ -83,6 +76,7 @@ export default function CreateEventScreen({ navigation }: any) {
     if (error) {
       Alert.alert("Error", error.message || "Could not create event");
     } else {
+      // ✅ Reset form state
       setTitle('');
       setDescription('');
       setLocation('');
@@ -90,21 +84,23 @@ export default function CreateEventScreen({ navigation }: any) {
       setEndsAt(new Date());
       setStartTime(new Date());
       setTagsArray([]);
-      setTagInput('');
       setIsPublic(true);
+
+      // ✅ Show success alert with navigation
       Alert.alert(
         "Success",
         "Event created!",
         [
           {
             text: "OK",
-            onPress: () => router.back(), // 👈 Navigate back to previous screen
+            onPress: () => router.back(),
           },
         ],
         { cancelable: false }
       );
     }
   };
+
 
   return (
     <KeyboardAvoidingView
