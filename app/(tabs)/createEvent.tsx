@@ -1,5 +1,6 @@
+import LabeledDatePicker from "@/components/LabeledDatePicker";
 import TagInput from "@/components/TagInput";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -147,11 +148,16 @@ export default function CreateEventScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Start Time</Text>
-        <DateTimePicker value={startTime} onChange={handleStartChange} mode="datetime" />
-
-        <Text style={styles.label}>End Time</Text>
-        <DateTimePicker value={endsAt} onChange={handleEndChange} mode="datetime" />
+        <LabeledDatePicker
+          label="Start Time"
+          value={startTime}
+          onChange={handleStartChange}
+        />
+        <LabeledDatePicker
+          label="End Time"
+          value={endsAt}
+          onChange={handleEndChange}
+        />
 
         <Text style={styles.label}>Tags</Text>
         <TagInput tags={tagsArray} setTags={setTagsArray} />
