@@ -1,3 +1,4 @@
+import TagInput from "@/components/TagInput";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from "expo-router";
@@ -16,7 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../../lib/supabase"; // adjust path if needed
+import { supabase } from "../../lib/supabase";
 
 
 interface CreateEventPayload {
@@ -52,20 +53,6 @@ export default function CreateEventScreen({ navigation }: any) {
   const handleEndChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (selectedDate) setEndsAt(selectedDate);
   };
-
-  const handleAddTag = () => {
-    const trimmed = tagInput.trim();
-    const normalized = trimmed.toLowerCase();
-    if (normalized && !tagsArray.includes(normalized)) {
-      setTagsArray([...tagsArray, normalized]);
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tag: string) => {
-    setTagsArray(tagsArray.filter((t) => t !== tag));
-  };
-
 
   const handleCreateEvent = async () => {
     if (!title || !description || !location) {
@@ -167,23 +154,7 @@ export default function CreateEventScreen({ navigation }: any) {
         <DateTimePicker value={endsAt} onChange={handleEndChange} mode="datetime" />
 
         <Text style={styles.label}>Tags</Text>
-        <View style={styles.tagInputRow}>
-        <TextInput
-            value={tagInput}
-            onChangeText={setTagInput}
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Enter tag"
-        />
-        <Button title="Add" onPress={handleAddTag} />
-        </View>
-
-        <View style={styles.tagList}>
-        {tagsArray.map((tag) => (
-            <TouchableOpacity key={tag} onPress={() => handleRemoveTag(tag)} style={styles.tagPill}>
-            <Text style={styles.tagText}>{tag} ✕</Text>
-            </TouchableOpacity>
-        ))}
-        </View>
+        <TagInput tags={tagsArray} setTags={setTagsArray} />
 
         <View style={styles.switchRow}>
           <Text style={styles.label}>Public?</Text>
