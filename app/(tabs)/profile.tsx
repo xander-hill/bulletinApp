@@ -1,7 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, Button, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Button, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfile } from '../../hooks/useProfile';
 
 export default function ProfileScreen() {
@@ -12,35 +13,110 @@ export default function ProfileScreen() {
   if (!profile) return <Text>No profile found.</Text>;
 
   const handleSignOut = async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        Alert.alert('Error signing out', error.message);
-      } else {
-        router.replace('/signin'); // send user back to sign-in
-      }
-    };
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      Alert.alert('Error signing out', error.message);
+    } else {
+      router.replace('/signin');
+    }
+  };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text>Username: {profile.username}</Text>
-      <Text>Full Name: {profile.full_name ?? 'N/A'}</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
+        {/* Profile Header */}
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+          {profile.avatar_url ? (
+            <Image
+              source={{ uri: profile.avatar_url }}
+              style={{ width: 100, height: 100, borderRadius: 50 }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+                backgroundColor: '#ccc',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 32 }}>{profile.username[0].toUpperCase()}</Text>
+            </View>
+          )}
+          <Text style={{ fontSize: 24, fontWeight: 'bold', marginTop: 10 }}>
+            {profile.username}
+          </Text>
+          {profile.full_name && (
+            <Text style={{ fontSize: 16, color: '#555' }}>{profile.full_name}</Text>
+          )}
+          {profile.bio && (
+            <Text style={{ fontSize: 14, color: '#333', marginTop: 10, textAlign: 'center' }}>
+              {profile.bio}
+            </Text>
+          )}
+          {profile.interests && profile.interests.length > 0 && (
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                marginTop: 10,
+              }}
+            >
+              {profile.interests.map((interest) => (
+                <View
+                  key={interest}
+                  style={{
+                    backgroundColor: '#e0e0e0',
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 15,
+                    margin: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 12 }}>{interest}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
 
-      {/* Followers button */}
-      <TouchableOpacity
-        onPress={() => router.push('/followers')}
-        style={{ marginTop: 20, padding: 10, backgroundColor: 'lightblue' }}
-      >
-        <Text>Followers ({profile.follower_count ?? 0})</Text>
-      </TouchableOpacity>
+        {/* Followers / Following */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
+          <TouchableOpacity onPress={() => router.push('/followers')}>
+            <Text style={{ fontSize: 16 }}>
+              Followers: {profile.follower_count ?? 0}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/following')}>
+            <Text style={{ fontSize: 16 }}>
+              Following: {profile.following_count ?? 0}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Following button */}
-      <TouchableOpacity
-        onPress={() => router.push('/following')}
-        style={{ marginTop: 10, padding: 10, backgroundColor: 'lightgreen' }}
-      >
-        <Text>Following ({profile.following_count ?? 0})</Text>
-      </TouchableOpacity>
-      <Button title="Sign Out" onPress={handleSignOut} />
-    </View>
+        {/* Edit Profile Button */}
+        <TouchableOpacity
+          onPress={() => router.push('/edit-profile')}
+          style={{
+            backgroundColor: '#4CAF50',
+            padding: 12,
+            borderRadius: 8,
+            alignItems: 'center',
+            marginBottom: 20,
+          }}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>Edit Profile</Text>
+        </TouchableOpacity>
+
+        {/* Event Feeds */}
+        {/* We will add <CreatedEventsFeed /> and <RSVPedEventsFeed /> here after you share your code */}
+
+        {/* Sign Out Button */}
+        <Button title="Sign Out" onPress={handleSignOut} color="#f44336" />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
