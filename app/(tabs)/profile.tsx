@@ -22,6 +22,9 @@ export default function ProfileScreen() {
     }
   };
 
+  console.log('Profile avatar_url:', profile.avatar_url);
+
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       {/* Profile Header */}
@@ -30,6 +33,8 @@ export default function ProfileScreen() {
           <Image
             source={{ uri: profile.avatar_url }}
             style={{ width: 100, height: 100, borderRadius: 50 }}
+            resizeMode="cover"
+            onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
           />
         ) : (
           <View
