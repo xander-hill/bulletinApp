@@ -1,24 +1,20 @@
-import { useEvents } from '@/hooks/useEvents';
-import { followImmediately, unfollow } from '@/lib/actions/follow'; // adjust imports if needed
+import EventFeed from '@/components/EventFeed';
+import { followImmediately, unfollow } from '@/lib/actions/follow';
 import { supabase } from '@/lib/supabase';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Image,
-  RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams();
-
   const [profile, setProfile] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
@@ -26,19 +22,6 @@ export default function PublicProfileScreen() {
   const [followStatus, setFollowStatus] = useState<string | null>(null);
   const [loadingFollow, setLoadingFollow] = useState(false);
 
-  const {
-    events,
-    loading: eventsLoading,
-    refreshing,
-    fetchMore,
-    onRefresh,
-    hasMore,
-  } = useEvents({
-    userId: id as string,
-    initialFilter: 'my',
-  });
-
-  // Fetch profile data and current user ID
   const fetchProfileData = useCallback(async () => {
     if (!id || typeof id !== 'string') return;
     setLoadingProfile(true);
@@ -70,7 +53,6 @@ export default function PublicProfileScreen() {
     fetchProfileData();
   }, [fetchProfileData]);
 
-  // Fetch follow status for current user
   useEffect(() => {
     if (!id || typeof id !== 'string' || !currentUserId || currentUserId === id) {
       setFollowStatus(null);
@@ -102,7 +84,6 @@ export default function PublicProfileScreen() {
       return;
     }
     setLoadingFollow(true);
-
     try {
       await followImmediately(currentUserId, id);
       setFollowStatus('accepted');
@@ -120,7 +101,6 @@ export default function PublicProfileScreen() {
       return;
     }
     setLoadingFollow(true);
-
     try {
       await unfollow(currentUserId, id);
       setFollowStatus(null);
@@ -145,10 +125,7 @@ export default function PublicProfileScreen() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
+    <View style={styles.container}>
       {profile.avatar_url && (
         <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
       )}
@@ -156,7 +133,6 @@ export default function PublicProfileScreen() {
       {profile.full_name && <Text style={styles.fullName}>{profile.full_name}</Text>}
       {profile.bio && <Text style={styles.bio}>{profile.bio}</Text>}
 
-      {/* Follow button logic */}
       {currentUserId && currentUserId !== id && (
         <View style={{ marginTop: 20, width: '100%' }}>
           {followStatus === 'accepted' ? (
@@ -185,47 +161,16 @@ export default function PublicProfileScreen() {
         </View>
       )}
 
-      {/* Events feed */}
-      <View style={{ width: '100%', marginTop: 30 }}>
-        <Text style={styles.sectionTitle}>Events</Text>
-
-        {eventsLoading && events.length === 0 ? (
-          <ActivityIndicator size="large" style={{ marginTop: 20 }} />
-        ) : events.length === 0 ? (
-          <Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>
-            No events found.
-          </Text>
-        ) : (
-          <FlatList
-            data={events}
-            keyExtractor={(item) => item.id}
-            onEndReached={() => {
-              if (hasMore) fetchMore();
-            }}
-            onEndReachedThreshold={0.5}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            renderItem={({ item }) => (
-              <View style={styles.eventCard}>
-                {item.image_url && (
-                  <Image source={{ uri: item.image_url }} style={styles.eventImage} />
-                )}
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={styles.eventTitle}>{item.title}</Text>
-                  <Text style={styles.eventDate}>
-                    {new Date(item.start_time).toLocaleDateString()}
-                  </Text>
-                  {item.location && (
-                    <Text style={styles.eventLocation}>{item.location}</Text>
-                  )}
-                </View>
-              </View>
-            )}
-          />
-        )}
+      {/* Event feed */}
+      <View style={{ width: '100%', marginTop: 30, flex: 1 }}>
+        <EventFeed
+          userId={id as string}
+          initialFilter="my"
+          headerTitle="Events by this user"
+          additionalFilters={{ upcoming: false }} // show all events, including past
+        />
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -283,36 +228,5 @@ const styles = StyleSheet.create({
     color: 'orange',
     fontWeight: 'bold',
     fontSize: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  eventCard: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: '#f9f9f9',
-    alignItems: 'center',
-  },
-  eventImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-  },
-  eventTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  eventDate: {
-    color: '#555',
-    fontSize: 13,
-  },
-  eventLocation: {
-    color: '#888',
-    fontSize: 12,
   },
 });
