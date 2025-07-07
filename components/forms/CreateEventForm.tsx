@@ -1,14 +1,10 @@
-import LabeledDatePicker from "@/components/LabeledDatePicker";
-import TagInput from "@/components/TagInput";
-import { CreateEventSchema } from "@/lib/validation/eventSchema";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
     ActivityIndicator,
     Alert,
-    Button,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -19,40 +15,57 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { supabase } from "../../lib/supabase";
 
-export default function CreateEventForm({ navigation }: any) {
+import LabeledDatePicker from "@/components/LabeledDatePicker";
+import TagInput from "@/components/TagInput";
+import { supabase } from "@/lib/supabase";
+import { CreateEventSchema } from "@/lib/validation/eventSchema";
+
+const initialState = {
+  title: "",
+  description: "",
+  location: "",
+  locationType: "physical" as "physical" | "online",
+  startTime: new Date(),
+  endsAt: new Date(),
+  tagsArray: [] as string[],
+  isPublic: true,
+};
+
+export default function CreateEventForm() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [locationType, setLocationType] = useState<"physical" | "online">("physical");
-  const [startTime, setStartTime] = useState<Date>(new Date());
-  const [endsAt, setEndsAt] = useState<Date>(new Date());
-  const [tagsArray, setTagsArray] = useState<string[]>([]);
-  const [isPublic, setIsPublic] = useState(true);
+  const [form, setForm] = useState(initialState);
   const [loading, setLoading] = useState(false);
 
+  const handleChange = (key: keyof typeof initialState, value: any) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
   const handleStartChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (selectedDate) setStartTime(selectedDate);
+    if (selectedDate) handleChange("startTime", selectedDate);
   };
 
   const handleEndChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (selectedDate) setEndsAt(selectedDate);
+    if (selectedDate) handleChange("endsAt", selectedDate);
   };
 
   const handleCreateEvent = async () => {
+    if (form.endsAt <= form.startTime) {
+      Alert.alert("Validation Error", "End time must be after start time.");
+      return;
+    }
+
     const payload = {
-      title,
-      description,
-      location,
-      location_type: locationType,
-      start_time: startTime.toISOString(),
-      ends_at: endsAt.toISOString(),
-      is_public: isPublic,
-      tags: tagsArray,
+      title: form.title,
+      description: form.description,
+      location: form.location,
+      location_type: form.locationType,
+      start_time: form.startTime.toISOString(),
+      ends_at: form.endsAt.toISOString(),
+      is_public: form.isPublic,
+      tags: form.tagsArray,
     };
 
     const parseResult = CreateEventSchema.safeParse(payload);
@@ -66,41 +79,21 @@ export default function CreateEventForm({ navigation }: any) {
     }
 
     setLoading(true);
-
-    const { error } = await supabase.functions.invoke("create-event", {
-      body: payload,
-    });
-
+    const { error } = await supabase.functions.invoke("create-event", { body: payload });
     setLoading(false);
 
     if (error) {
       Alert.alert("Error", error.message || "Could not create event");
     } else {
-      // ✅ Reset form state
-      setTitle('');
-      setDescription('');
-      setLocation('');
-      setLocationType("physical");
-      setEndsAt(new Date());
-      setStartTime(new Date());
-      setTagsArray([]);
-      setIsPublic(true);
-
-      // ✅ Show success alert with navigation
-      Alert.alert(
-        "Success",
-        "Event created!",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back(),
-          },
-        ],
-        { cancelable: false }
-      );
+      setForm(initialState);
+      Alert.alert("Success", "Event created!", [
+        {
+          text: "OK",
+          onPress: () => router.back(),
+        },
+      ]);
     }
   };
-
 
   return (
     <KeyboardAvoidingView
@@ -110,86 +103,86 @@ export default function CreateEventForm({ navigation }: any) {
     >
       <ScrollView
         contentContainerStyle={{
-            padding: 20,
-            paddingBottom: tabBarHeight + 40,
+          padding: 20,
+          paddingBottom: tabBarHeight + 40,
         }}
-        >
+      >
         <Text style={styles.label}>Title</Text>
-        <TextInput value={title} onChangeText={setTitle} style={styles.input} />
+        <TextInput
+          value={form.title}
+          onChangeText={(text) => handleChange("title", text)}
+          style={styles.input}
+        />
 
         <Text style={styles.label}>Description</Text>
         <TextInput
-          value={description}
-          onChangeText={setDescription}
+          value={form.description}
+          onChangeText={(text) => handleChange("description", text)}
           style={[styles.input, styles.multiline]}
           multiline
         />
 
         <Text style={styles.label}>Location</Text>
-        <TextInput value={location} onChangeText={setLocation} style={styles.input} />
+        <TextInput
+          value={form.location}
+          onChangeText={(text) => handleChange("location", text)}
+          style={styles.input}
+        />
 
         <Text style={styles.label}>Location Type</Text>
         <View style={styles.toggleRow}>
-          <TouchableOpacity
-            onPress={() => setLocationType("physical")}
-            style={[styles.toggleBtn, locationType === "physical" && styles.selected]}
-          >
-            <Text>Physical</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setLocationType("online")}
-            style={[styles.toggleBtn, locationType === "online" && styles.selected]}
-          >
-            <Text>Online</Text>
-          </TouchableOpacity>
+          {(["physical", "online"] as const).map((type) => (
+            <TouchableOpacity
+              key={type}
+              onPress={() => handleChange("locationType", type)}
+              style={[styles.toggleBtn, form.locationType === type && styles.selected]}
+            >
+              <Text>{type.charAt(0).toUpperCase() + type.slice(1)}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        <LabeledDatePicker
-          label="Start Time"
-          value={startTime}
-          onChange={handleStartChange}
-        />
-        <LabeledDatePicker
-          label="End Time"
-          value={endsAt}
-          onChange={handleEndChange}
-        />
+        <LabeledDatePicker label="Start Time" value={form.startTime} onChange={handleStartChange} />
+        <LabeledDatePicker label="End Time" value={form.endsAt} onChange={handleEndChange} />
 
         <Text style={styles.label}>Tags</Text>
-        <TagInput tags={tagsArray} setTags={setTagsArray} />
+        <TagInput tags={form.tagsArray} setTags={(tags) => handleChange("tagsArray", tags)} />
 
         <View style={styles.switchRow}>
           <Text style={styles.label}>Public?</Text>
-          <Switch value={isPublic} onValueChange={setIsPublic} />
+          <Switch value={form.isPublic} onValueChange={(val) => handleChange("isPublic", val)} />
         </View>
 
-        <View style={{ marginTop: 20 }}>
+        <TouchableOpacity
+          style={[styles.createButton, loading && styles.buttonDisabled]}
+          onPress={handleCreateEvent}
+          disabled={loading}
+        >
           {loading ? (
-            <ActivityIndicator />
+            <ActivityIndicator color="#fff" />
           ) : (
-            <Button title="Create Event" onPress={handleCreateEvent} />
+            <Text style={styles.createButtonText}>Create Event</Text>
           )}
-        </View>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: "#fff",
-  },
   label: {
     marginTop: 12,
     fontWeight: "bold",
+    color: "#1c1c1c",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#d1d1d1",
     padding: 10,
     borderRadius: 6,
     marginTop: 4,
+    backgroundColor: "#ffffff",
+    color: "#1c1c1c",
   },
   multiline: {
     height: 100,
@@ -202,11 +195,12 @@ const styles = StyleSheet.create({
   },
   toggleBtn: {
     borderWidth: 1,
-    borderColor: "#aaa",
+    borderColor: "#d1d1d1",
     padding: 10,
     borderRadius: 6,
     width: "48%",
     alignItems: "center",
+    backgroundColor: "#ffffff",
   },
   selected: {
     backgroundColor: "#e0e0e0",
@@ -217,23 +211,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 12,
   },
-  tagInputRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  marginTop: 8,
-  // If your React Native version doesn’t support gap, use marginRight on TextInput instead
-    },
-    tagList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 8,
-    },
-    tagPill: {
-    backgroundColor: "#eee",
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    marginRight: 8,
-    marginBottom: 8,
-    },
+  createButton: {
+    backgroundColor: "#007AFF",
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  createButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
 });
