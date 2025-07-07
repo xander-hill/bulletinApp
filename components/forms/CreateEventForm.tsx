@@ -100,16 +100,18 @@ export default function CreateEventForm() {
     }
 
     setLoading(true);
-    const { error } = await supabase.functions.invoke("create-event", { body: payload });
+    const { data , error } = await supabase.functions.invoke("create-event", { body: payload });
     setLoading(false);
 
     if (error) {
       Alert.alert("Error", error.message || "Could not create event");
     } else {
       setForm(initialState);
+      //const newEventId = data.id;
       Alert.alert("Success", "Event created!", [
         {
           text: "OK",
+          //change supabase function to return an id and redeploy
           onPress: () => router.back(),
         },
       ]);
