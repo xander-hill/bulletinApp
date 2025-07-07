@@ -40,7 +40,11 @@ export default function CreateEventForm() {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (key: keyof typeof initialState, value: any) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    if (key === "locationType" && value === "online") {
+      setForm((prev) => ({ ...prev, [key]: value, location: "Online" }));
+    } else {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    }
   };
 
   const handleStartChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -52,6 +56,23 @@ export default function CreateEventForm() {
   };
 
   const handleCreateEvent = async () => {
+    const now = new Date();
+
+    if (form.title.trim().length < 4) {
+      Alert.alert("Validation Error", "Title must be at least 4 characters.");
+      return;
+    }
+
+    if (form.startTime <= now) {
+      Alert.alert("Validation Error", "Start time must be in the future.");
+      return;
+    }
+
+    if (form.endsAt <= now) {
+      Alert.alert("Validation Error", "End time must be in the future.");
+      return;
+    }
+
     if (form.endsAt <= form.startTime) {
       Alert.alert("Validation Error", "End time must be after start time.");
       return;
