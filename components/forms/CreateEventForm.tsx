@@ -107,12 +107,12 @@ export default function CreateEventForm() {
       Alert.alert("Error", error.message || "Could not create event");
     } else {
       setForm(initialState);
-      //const newEventId = data.id;
+      const newEventId = data.id;
       Alert.alert("Success", "Event created!", [
         {
           text: "OK",
           //change supabase function to return an id and redeploy
-          onPress: () => router.back(),
+          onPress: () => router.push(`/event/${newEventId}`),
         },
       ]);
     }
