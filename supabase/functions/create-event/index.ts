@@ -41,6 +41,8 @@ serve(async (req) => {
       ends_at,
       is_public = true,
       tags = [],
+      latitude = null,
+      longitude = null,
     } = body;
 
     // Basic input checks (add more as needed)
@@ -53,12 +55,12 @@ serve(async (req) => {
       ? "Online"
       : location?.trim() || "TBD";
 
-    // Insert event
+    // Insert event with latitude & longitude
     const { error } = await supabase
       .from("events")
       .insert({
         id: eventId,
-        creator_id: user.id, // same as profiles.id
+        creator_id: user.id,
         title,
         description,
         location_type,
@@ -67,6 +69,8 @@ serve(async (req) => {
         ends_at,
         is_public,
         tags,
+        latitude,
+        longitude,
       });
 
     if (error) {
@@ -74,10 +78,15 @@ serve(async (req) => {
       return new Response("Database insert error", { status: 500 });
     }
 
-    return new Response("Event created", { status: 200 });
+    return new Response(JSON.stringify({ id: eventId }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+
   } catch (err) {
     console.error("Error:", err);
     return new Response("Invalid request", { status: 400 });
   }
+
 });
 
