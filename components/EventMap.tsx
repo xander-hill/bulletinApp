@@ -1,61 +1,30 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { useEvents } from '@/hooks/useEvents';
-import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
-export default function EventMap({
-  userId,
-  initialFilter,
-  additionalFilters,
-}) {
-  const { user } = useAuth();
-
-  const {
-    events,
-    loading,
-    refreshing,
-    onRefresh,
-  } = useEvents({
-    userId: userId ?? user?.id,
-    initialFilter,
-    additionalFilters,
-  });
-
-  if (loading || refreshing) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  const eventsWithCoordinates = events.filter(
-    (event) => event.latitude && event.longitude
-  );
-
+export default function EventMap() {
   return (
-    <MapView
-      style={{ flex: 1 }}
-      initialRegion={{
-        latitude: eventsWithCoordinates[0]?.latitude || 38.8951,
-        longitude: eventsWithCoordinates[0]?.longitude || -77.0364,
-        latitudeDelta: 0.2,
-        longitudeDelta: 0.2,
-      }}
-      onRefresh={onRefresh}
-    >
-      {eventsWithCoordinates.map((event) => (
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: 38.89,
+          longitude: -77.03,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+      >
         <Marker
-          key={event.id}
-          coordinate={{
-            latitude: event.latitude,
-            longitude: event.longitude,
-          }}
-          title={event.title}
-          description={event.location}
+          coordinate={{ latitude: 38.89, longitude: -77.03 }}
+          title="White House"
+          description="Event Location"
         />
-      ))}
-    </MapView>
+      </MapView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: { flex: 1 },
+});
+
