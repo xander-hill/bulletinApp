@@ -13,8 +13,7 @@ export default function DiscoveryFeed() {
   const additionalFilters = useMemo(() => ({
     tags: selectedTags.length ? selectedTags : undefined,
     keyword: keyword || undefined,
-    sort: sort || undefined,
-  }), [selectedTags, keyword, sort]);
+  }), [selectedTags, keyword]);
 
   console.log(selectedTags);
 
@@ -50,7 +49,10 @@ export default function DiscoveryFeed() {
           additionalFilters={additionalFilters}
         />
       ) : (
-        <EventMap additionalFilters={additionalFilters} />
+        <EventMap 
+          additionalFilters={additionalFilters} 
+          initialFilter="upcoming"
+        />
       )}
     </View>
   );
