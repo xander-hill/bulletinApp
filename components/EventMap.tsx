@@ -1,8 +1,9 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { FilterType } from '@/lib/types/filterType';
-import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ActivityIndicator, Button, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 type EventMapProps = {
@@ -17,6 +18,15 @@ export default function EventMap({
     additionalFilters = {},
 }: EventMapProps) {
   const { user } = useAuth();
+  const router = useRouter();
+
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const onMarkerPress = (event) => {
+    setSelectedEvent(event);
+    setModalVisible(true);
+  };
   
     const {
         events,
@@ -62,16 +72,40 @@ export default function EventMap({
       >
         {eventsWithCoordinates.map((event) => (
           <Marker
-            key={event.id}
-            coordinate={{
-              latitude: event.latitude,
-              longitude: event.longitude,
-            }}
-            title={event.title}
-            description={event.location}
-          />
+                key={event.id}
+                coordinate={{
+                latitude: event.latitude,
+                longitude: event.longitude,
+                }}
+                title={event.title}
+                onPress={() => onMarkerPress(event)}
+            />
         ))}
+        
       </MapView>
+
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <Text style={styles.title}>{selectedEvent?.title}</Text>
+            <Text>{selectedEvent?.description}</Text>
+
+            <Button
+              title="View Details"
+              onPress={() => {
+                setModalVisible(false);
+                router.push(`/event/${selectedEvent.id}`);
+              }}
+            />
+            <Button title="Close" onPress={() => setModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
 
       {/* Refresh Button Overlay */}
       <TouchableOpacity
@@ -96,13 +130,21 @@ export default function EventMap({
 }
 
 const styles = StyleSheet.create({
-  map: {
+  modalBackdrop: {
     flex: 1,
-  },
-  center: {
-    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 20,
+  },
+  title: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 10,
   },
 });
 

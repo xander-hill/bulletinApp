@@ -22,8 +22,7 @@ export function useEvent(eventId: string | null) {
       })
       .finally(() => setLoading(false));
   }, [eventId]);
-
-  console.log(event);
+  
   return { event, loading, error };
 }
 
