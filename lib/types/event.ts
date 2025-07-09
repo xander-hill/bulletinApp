@@ -10,4 +10,6 @@ export type Event = {
   created_at: string;
   is_public: boolean;
   rsvp_count: number;
+  latitude: number | null;
+  longitude: number | null;
 };
