@@ -20,6 +20,8 @@ import LabeledDatePicker from "@/components/LabeledDatePicker";
 import TagInput from "@/components/TagInput";
 import { supabase } from "@/lib/supabase";
 import { CreateEventSchema } from "@/lib/validation/eventSchema";
+import * as Location from "expo-location";
+
 
 const initialState = {
   title: "",
@@ -78,6 +80,37 @@ export default function CreateEventForm() {
       return;
     }
 
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+
+    if (form.locationType === "physical") {
+      if (!form.location || form.location.trim().length < 5) {
+        Alert.alert("Validation Error", "Please enter a complete address for physical events.");
+        return;
+      }
+
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Permission Denied", "Location permissions are required for geocoding the address.");
+          return;
+        }
+
+        const geocoded = await Location.geocodeAsync(form.location);
+        if (geocoded.length === 0) {
+          Alert.alert("Error", "Could not find this address. Please check and enter a more complete address.");
+          return;
+        }
+
+        latitude = geocoded[0].latitude;
+        longitude = geocoded[0].longitude;
+      } catch (error) {
+        console.error(error);
+        Alert.alert("Error", "There was an error trying to geocode the address.");
+        return;
+      }
+    }
+
     const payload = {
       title: form.title,
       description: form.description,
@@ -87,6 +120,8 @@ export default function CreateEventForm() {
       ends_at: form.endsAt.toISOString(),
       is_public: form.isPublic,
       tags: form.tagsArray,
+      latitude,
+      longitude,
     };
 
     const parseResult = CreateEventSchema.safeParse(payload);
@@ -100,7 +135,7 @@ export default function CreateEventForm() {
     }
 
     setLoading(true);
-    const { data , error } = await supabase.functions.invoke("create-event", { body: payload });
+    const { data, error } = await supabase.functions.invoke("create-event", { body: payload });
     setLoading(false);
 
     if (error) {
@@ -111,12 +146,14 @@ export default function CreateEventForm() {
       Alert.alert("Success", "Event created!", [
         {
           text: "OK",
-          //change supabase function to return an id and redeploy
           onPress: () => router.push(`/event/${newEventId}`),
         },
       ]);
     }
   };
+
+
+  //onPress: () => router.push(`/event/${newEventId}`),
 
   return (
     <KeyboardAvoidingView
