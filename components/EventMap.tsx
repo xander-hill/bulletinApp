@@ -43,6 +43,35 @@ export default function EventMap({
     longitudeDelta: 0.2,
   });
 
+  React.useEffect(() => {
+    const fetchInitialLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.warn('Location permission not granted.');
+          return;
+        }
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+
+        const initialRegion = {
+          latitude,
+          longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        };
+
+        setCurrentRegion(initialRegion);
+        mapRef.current?.animateToRegion(initialRegion, 500);
+      } catch (error) {
+        console.error('Error fetching initial location:', error);
+      }
+    };
+
+    fetchInitialLocation();
+  }, []);
+
+
   const {
     events,
     loading,
