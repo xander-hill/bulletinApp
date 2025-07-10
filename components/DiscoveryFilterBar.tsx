@@ -9,8 +9,8 @@ interface DiscoveryFilterBarProps {
   onTagsChange: (tags: string[]) => void;
   keyword: string;
   onKeywordChange: (val: string) => void;
-  sort: string;
-  onSortChange: (val: string) => void;
+  sort?: string;
+  onSortChange?: (val: string) => void;
 }
 
 export default function DiscoveryFilterBar({
@@ -29,15 +29,17 @@ export default function DiscoveryFilterBar({
         selectedTags={selectedTags}
         onChange={onTagsChange}
       />
-      <SortSelector
-        options={[
-          { label: 'Upcoming', value: 'upcoming' },
-          { label: 'Popular', value: 'popular' },
-          { label: 'Newest', value: 'newest' },
-        ]}
-        selected={sort}
-        onChange={onSortChange}
-      />
+      {sort !== undefined && onSortChange && (
+        <SortSelector
+          options={[
+            { label: 'Upcoming', value: 'upcoming' },
+            { label: 'Popular', value: 'popular' },
+            { label: 'Newest', value: 'newest' },
+          ]}
+          selected={sort}
+          onChange={onSortChange}
+        />
+      )}
     </View>
   );
 }

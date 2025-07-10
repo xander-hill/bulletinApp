@@ -24,8 +24,10 @@ export default function DiscoveryFeed() {
         onTagsChange={setSelectedTags}
         keyword={keyword}
         onKeywordChange={setKeyword}
-        sort={sort}
-        onSortChange={setSort}
+        {...(viewMode === 'card' && {
+          sort,
+          onSortChange: setSort,
+        })}
       />
 
       {/* View Mode Toggle */}
