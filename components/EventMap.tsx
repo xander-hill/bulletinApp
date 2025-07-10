@@ -5,14 +5,14 @@ import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Button,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Button,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
@@ -36,10 +36,12 @@ export default function EventMap({
 
   const [locating, setLocating] = useState(false);
 
-  const onMarkerPress = (event: any) => {
-    setSelectedEvent(event);
-    setModalVisible(true);
-  };
+  const [currentRegion, setCurrentRegion] = useState({
+    latitude: 38.8951,
+    longitude: -77.0364,
+    latitudeDelta: 0.2,
+    longitudeDelta: 0.2,
+  });
 
   const {
     events,
@@ -51,6 +53,27 @@ export default function EventMap({
     initialFilter,
     additionalFilters,
   });
+
+  const onMarkerPress = (event: any) => {
+    setSelectedEvent(event);
+    setModalVisible(true);
+  };
+
+  const handleZoomIn = () => {
+    mapRef.current?.animateToRegion({
+      ...currentRegion,
+      latitudeDelta: currentRegion.latitudeDelta / 2,
+      longitudeDelta: currentRegion.longitudeDelta / 2,
+    }, 300);
+  };
+
+  const handleZoomOut = () => {
+    mapRef.current?.animateToRegion({
+      ...currentRegion,
+      latitudeDelta: currentRegion.latitudeDelta * 2,
+      longitudeDelta: currentRegion.longitudeDelta * 2,
+    }, 300);
+  };
 
   const locateUser = async () => {
     try {
@@ -94,12 +117,8 @@ export default function EventMap({
         ref={mapRef}
         style={{ flex: 1 }}
         showsUserLocation
-        initialRegion={{
-          latitude: eventsWithCoordinates[0]?.latitude ?? 38.8951,
-          longitude: eventsWithCoordinates[0]?.longitude ?? -77.0364,
-          latitudeDelta: 0.2,
-          longitudeDelta: 0.2,
-        }}
+        region={currentRegion}
+        onRegionChangeComplete={setCurrentRegion}
       >
         {eventsWithCoordinates.map((event) => (
           <Marker
@@ -159,6 +178,20 @@ export default function EventMap({
         ) : (
           <Text style={styles.buttonText}>Locate Me</Text>
         )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={handleZoomIn}
+        style={[styles.button, { top: 140, right: 20, backgroundColor: '#4F46E5' }]}
+      >
+        <Text style={styles.buttonText}>Zoom In</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={handleZoomOut}
+        style={[styles.button, { top: 200, right: 20, backgroundColor: '#F59E0B' }]}
+      >
+        <Text style={styles.buttonText}>Zoom Out</Text>
       </TouchableOpacity>
     </View>
   );
