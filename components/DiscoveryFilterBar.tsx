@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
 import KeywordSearchInput from './filtering/KeywordSearchInput';
 import SortSelector from './filtering/SortSelector';
-import TagSelector from './filtering/TagSelector';
 
 interface DiscoveryFilterBarProps {
   selectedTags: string[];
@@ -13,6 +13,12 @@ interface DiscoveryFilterBarProps {
   onSortChange?: (val: string) => void;
 }
 
+const AVAILABLE_TAGS = [
+  "music", "sports", "tech", "art", "food", "networking", "fitness",
+  "gaming", "outdoors", "wellness", "startup", "education", "coding",
+  "dance", "film", "volunteering", "culture", "comedy",
+];
+
 export default function DiscoveryFilterBar({
   selectedTags,
   onTagsChange,
@@ -21,13 +27,26 @@ export default function DiscoveryFilterBar({
   sort,
   onSortChange,
 }: DiscoveryFilterBarProps) {
+
+  const [open, setOpen] = useState(false);
+  const [tagOptions, setTagOptions] = useState(
+    AVAILABLE_TAGS.map(tag => ({ label: tag, value: tag }))
+  );
+
   return (
     <View>
       <KeywordSearchInput value={keyword} onChange={onKeywordChange} />
-      <TagSelector
-        tags={['music', 'sports', 'tech', 'art', 'food']}
-        selectedTags={selectedTags}
-        onChange={onTagsChange}
+      <DropDownPicker
+        open={open}
+        setOpen={setOpen}
+        multiple
+        value={selectedTags}
+        setValue={onTagsChange}
+        items={tagOptions}
+        setItems={setTagOptions}
+        placeholder="Select Interests"
+        mode="BADGE"
+        searchable
       />
       {sort !== undefined && onSortChange && (
         <SortSelector
