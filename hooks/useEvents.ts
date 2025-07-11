@@ -29,6 +29,10 @@ export function useEvents({
   const [hasMore, setHasMore] = useState(true);
   const [filterType, setFilterType] = useState<FilterType>(initialFilter);
 
+  console.log("use events called");
+  console.log("initial filter: ", initialFilter);
+  console.log("additional filters: ", additionalFilters)
+
   const filters = useMemo(() => ({
     upcoming: filterType === 'upcoming',
     userId,
@@ -46,8 +50,14 @@ export function useEvents({
       : undefined;
 
   const fetchMore = useCallback(async () => {
-    if (loading || refreshing || !hasMore) return;
-    if ((filterType === 'my' || filterType === 'rsvped') && !userId) return;
+    if (loading || refreshing || !hasMore) {
+      console.log('fetchMore skipped: loading, refreshing or no more', { loading, refreshing, hasMore });
+      return;
+    }
+    if ((filterType === 'my' || filterType === 'rsvped') && !userId) {
+      console.log('fetchMore skipped: filterType needs userId but none provided', { filterType, userId });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -69,7 +79,10 @@ export function useEvents({
   }, [loading, refreshing, hasMore, filterType, userId, filters]);
 
   const onRefresh = useCallback(async () => {
-    if ((filterType === 'my' || filterType === 'rsvped') && !userId) return;
+    if ((filterType === 'my' || filterType === 'rsvped') && !userId) {
+      console.log('onRefresh skipped: filterType needs userId but none provided', { filterType, userId });
+      return;
+    }
 
     setRefreshing(true);
     setHasMore(true);

@@ -4,6 +4,8 @@ import { EventFilters } from '../types/eventFilter';
 import { buildEventQuery } from './buildEventQuery';
 
 export async function fetchEventsWithFilters(filters: EventFilters, cursor?: string): Promise<Event[]> {
+  console.log("fetching events with filters: ", filters);
+
   if (filters.rsvped && filters.userId) {
     const { data: rsvps, error: rsvpError } = await supabase
       .from('rsvps')

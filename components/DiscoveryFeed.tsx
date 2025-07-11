@@ -36,10 +36,6 @@ export default function DiscoveryFeed() {
     userLng: userLng ?? undefined,
   }), [selectedTags, keyword, sort, userLat, userLng]);
 
-  console.log(sort);
-  console.log(userLat);
-  console.log(userLng);
-
   return (
     <View style={{ flex: 1 }}>
       <DiscoveryFilterBar
