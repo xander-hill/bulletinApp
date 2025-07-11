@@ -5,4 +5,6 @@ export type EventFilters = Partial<{
   userId: string;
   rsvped: boolean;
   sort: string;
+  userLat: number;   // latitude
+  userLng: number;   // longitude
 }>;

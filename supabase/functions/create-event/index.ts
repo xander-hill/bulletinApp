@@ -71,6 +71,7 @@ serve(async (req) => {
         tags,
         latitude,
         longitude,
+        geom: latitude && longitude ? `SRID=4326;POINT(${longitude} ${latitude})` : null,
       });
 
     if (error) {

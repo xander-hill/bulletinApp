@@ -54,6 +54,7 @@ export default function DiscoveryFilterBar({
             { label: 'Upcoming', value: 'upcoming' },
             { label: 'Popular', value: 'popular' },
             { label: 'Newest', value: 'newest' },
+            { label: 'Closest', value: 'closest' },
           ]}
           selected={sort}
           onChange={onSortChange}

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import * as Location from 'expo-location';
+import { useEffect, useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import DiscoveryFilterBar from './DiscoveryFilterBar';
 import EventFeed from './EventFeed';
@@ -9,13 +10,35 @@ export default function DiscoveryFeed() {
   const [keyword, setKeyword] = useState('');
   const [sort, setSort] = useState('upcoming');
   const [viewMode, setViewMode] = useState<'card' | 'map'>('card');
+  const [userLat, setUserLat] = useState<number | undefined>(undefined);
+  const [userLng, setUserLng] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('Location permission denied');
+        return;
+      }
+      const location = await Location.getCurrentPositionAsync({});
+      setUserLat(location.coords.latitude);
+      setUserLng(location.coords.longitude);
+    })();
+  }, []);
+
+
 
   const additionalFilters = useMemo(() => ({
     tags: selectedTags.length ? selectedTags : undefined,
     keyword: keyword || undefined,
-  }), [selectedTags, keyword]);
+    sort,
+    userLat: userLat ?? undefined,
+    userLng: userLng ?? undefined,
+  }), [selectedTags, keyword, sort, userLat, userLng]);
 
-  console.log(selectedTags);
+  console.log(sort);
+  console.log(userLat);
+  console.log(userLng);
 
   return (
     <View style={{ flex: 1 }}>
