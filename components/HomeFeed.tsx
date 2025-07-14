@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 180, // increased from 120
     height: 180, // increased from 120
-    borderRadius: 90, // still circular for now
+    borderRadius: 60, // still circular for now
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: '#fff',
