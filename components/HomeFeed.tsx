@@ -2,16 +2,31 @@ import EventCard from '@/components/EventCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Easing, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HomeFeed() {
   const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
+  const animation = useRef(new Animated.Value(0)).current; 
+  // 0 = collapsed, 1 = expanded
+
+  const animatedWidth = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [180, SCREEN_WIDTH],
+  });
+
+  const animatedHeight = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [180, SCREEN_HEIGHT / 3],
+  });
+
+
+  const [isExpanded, setIsExpanded] = useState(false);
+
 
   const {
     events,
@@ -72,44 +87,66 @@ export default function HomeFeed() {
       />
 
       {currentEvent && currentEvent.latitude && currentEvent.longitude && (
-        <View style={styles.miniMapContainer}>
-          <MapView
-            ref={mapRef}
-            style={styles.miniMap}
-            initialRegion={{
-              latitude: currentEvent.latitude,
-              longitude: currentEvent.longitude,
-              latitudeDelta: 0.02,
-              longitudeDelta: 0.02,
-            }}
-            scrollEnabled={true}        // enable panning
-            zoomEnabled={true}          // enable pinch zoom
-            rotateEnabled={false}
-            onRegionChangeComplete={(region) => {
-              // Clamp zoom levels
-              if (region.latitudeDelta > 0.05 || region.longitudeDelta > 0.05) {
-                mapRef.current?.animateToRegion({
-                  latitude: region.latitude,
-                  longitude: region.longitude,
-                  latitudeDelta: 0.05,
-                  longitudeDelta: 0.05,
-                });
-              }
-              if (region.latitudeDelta < 0.01 || region.longitudeDelta < 0.01) {
-                mapRef.current?.animateToRegion({
-                  latitude: region.latitude,
-                  longitude: region.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                });
-              }
+        <Animated.View style={[
+          styles.miniMapContainer,
+          {
+            width: animatedWidth,
+            height: animatedHeight,
+          }
+        ]}>
+          <TouchableWithoutFeedback
+            onPress={() => {
+                Animated.timing(animation, {
+                  toValue: isExpanded ? 0 : 1,
+                  duration: 300,
+                  easing: Easing.out(Easing.ease),
+                  useNativeDriver: false,
+                }).start();
+                setIsExpanded(!isExpanded);
             }}
           >
-            <Marker coordinate={{
-              latitude: currentEvent.latitude,
-              longitude: currentEvent.longitude,
-            }} />
-          </MapView>
+            <View style={[
+              styles.miniMapContainer,
+              isExpanded ? styles.miniMapContainerExpanded : null
+            ]}>
+              <MapView
+                ref={mapRef}
+                style={styles.miniMap}
+                initialRegion={{
+                  latitude: currentEvent.latitude,
+                  longitude: currentEvent.longitude,
+                  latitudeDelta: 0.02,
+                  longitudeDelta: 0.02,
+                }}
+                scrollEnabled={true}
+                zoomEnabled={true}
+                rotateEnabled={false}
+                onRegionChangeComplete={(region) => {
+                  if (region.latitudeDelta > 0.05 || region.longitudeDelta > 0.05) {
+                    mapRef.current?.animateToRegion({
+                      latitude: region.latitude,
+                      longitude: region.longitude,
+                      latitudeDelta: 0.05,
+                      longitudeDelta: 0.05,
+                    });
+                  }
+                  if (region.latitudeDelta < 0.01 || region.longitudeDelta < 0.01) {
+                    mapRef.current?.animateToRegion({
+                      latitude: region.latitude,
+                      longitude: region.longitude,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    });
+                  }
+                }}
+              >
+                <Marker coordinate={{
+                  latitude: currentEvent.latitude,
+                  longitude: currentEvent.longitude,
+                }} />
+              </MapView>
+            </View>
+          </TouchableWithoutFeedback>
           {currentEvent && (
         <TouchableOpacity
           style={styles.recenterButton}
@@ -127,7 +164,7 @@ export default function HomeFeed() {
           <Ionicons name="locate" size={20} color="#fff" />
         </TouchableOpacity>
       )}
-        </View>
+        </Animated.View>
       )}
     </View>
   );
@@ -171,5 +208,12 @@ const styles = StyleSheet.create({
   recenterButtonText: {
     color: '#fff',
     fontSize: 12,
+  },
+  miniMapContainerExpanded: {
+    width: '100%',
+    height: SCREEN_HEIGHT / 3,
+    top: 0,
+    right: 0,
+    borderRadius: 0,
   },
 });
