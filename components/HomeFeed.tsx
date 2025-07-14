@@ -1,8 +1,12 @@
+// Updated HomeFeed with animation-based enlarge/shrink toggle using a dedicated button
+// while maintaining the recenter ('find me') button cleanly below it.
+
 import EventCard from '@/components/EventCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
+import { Feather } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, Easing, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Easing, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -11,8 +15,8 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function HomeFeed() {
   const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
-  const animation = useRef(new Animated.Value(0)).current; 
-  // 0 = collapsed, 1 = expanded
+  const animation = useRef(new Animated.Value(0)).current; // 0 = collapsed, 1 = expanded
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const animatedWidth = animation.interpolate({
     inputRange: [0, 1],
@@ -23,10 +27,6 @@ export default function HomeFeed() {
     inputRange: [0, 1],
     outputRange: [180, SCREEN_HEIGHT / 3],
   });
-
-
-  const [isExpanded, setIsExpanded] = useState(false);
-
 
   const {
     events,
@@ -58,6 +58,16 @@ export default function HomeFeed() {
     }
   }, []);
 
+  const toggleMapSize = () => {
+    Animated.timing(animation, {
+      toValue: isExpanded ? 0 : 1,
+      duration: 300,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <FlatList
@@ -79,91 +89,61 @@ export default function HomeFeed() {
           itemVisiblePercentThreshold: 50,
         }}
         ListFooterComponent={loading ? <ActivityIndicator size="large" /> : null}
-        ListEmptyComponent={
-          !loading && !refreshing ? (
-            <Text style={styles.emptyText}>No events to show.</Text>
-          ) : null
-        }
+        ListEmptyComponent={!loading && !refreshing ? (
+          <Text style={styles.emptyText}>No events to show.</Text>
+        ) : null}
       />
 
       {currentEvent && currentEvent.latitude && currentEvent.longitude && (
         <Animated.View style={[
           styles.miniMapContainer,
-          {
-            width: animatedWidth,
-            height: animatedHeight,
-          }
+          { width: animatedWidth, height: animatedHeight },
+          isExpanded ? styles.miniMapContainerExpanded : null
         ]}>
-          <TouchableWithoutFeedback
-            onPress={() => {
-                Animated.timing(animation, {
-                  toValue: isExpanded ? 0 : 1,
-                  duration: 300,
-                  easing: Easing.out(Easing.ease),
-                  useNativeDriver: false,
-                }).start();
-                setIsExpanded(!isExpanded);
+
+          <MapView
+            ref={mapRef}
+            style={styles.miniMap}
+            initialRegion={{
+              latitude: currentEvent.latitude,
+              longitude: currentEvent.longitude,
+              latitudeDelta: 0.02,
+              longitudeDelta: 0.02,
             }}
+            scrollEnabled={true}
+            zoomEnabled={true}
+            rotateEnabled={false}
           >
-            <View style={[
-              styles.miniMapContainer,
-              isExpanded ? styles.miniMapContainerExpanded : null
-            ]}>
-              <MapView
-                ref={mapRef}
-                style={styles.miniMap}
-                initialRegion={{
+            <Marker coordinate={{
+              latitude: currentEvent.latitude,
+              longitude: currentEvent.longitude,
+            }} />
+          </MapView>
+
+          {/* Expand/Collapse button */}
+          <TouchableOpacity
+            style={styles.expandButton}
+            onPress={toggleMapSize}
+          >
+            <Feather name={isExpanded ? "minimize" : "maximize"} size={20} color="#fff" />
+          </TouchableOpacity>
+
+          {/* Recenter button below expand button */}
+          <TouchableOpacity
+            style={styles.recenterButton}
+            onPress={() => {
+              if (currentEvent.latitude && currentEvent.longitude) {
+                mapRef.current?.animateToRegion({
                   latitude: currentEvent.latitude,
                   longitude: currentEvent.longitude,
                   latitudeDelta: 0.02,
                   longitudeDelta: 0.02,
-                }}
-                scrollEnabled={true}
-                zoomEnabled={true}
-                rotateEnabled={false}
-                onRegionChangeComplete={(region) => {
-                  if (region.latitudeDelta > 0.05 || region.longitudeDelta > 0.05) {
-                    mapRef.current?.animateToRegion({
-                      latitude: region.latitude,
-                      longitude: region.longitude,
-                      latitudeDelta: 0.05,
-                      longitudeDelta: 0.05,
-                    });
-                  }
-                  if (region.latitudeDelta < 0.01 || region.longitudeDelta < 0.01) {
-                    mapRef.current?.animateToRegion({
-                      latitude: region.latitude,
-                      longitude: region.longitude,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    });
-                  }
-                }}
-              >
-                <Marker coordinate={{
-                  latitude: currentEvent.latitude,
-                  longitude: currentEvent.longitude,
-                }} />
-              </MapView>
-            </View>
-          </TouchableWithoutFeedback>
-          {currentEvent && (
-        <TouchableOpacity
-          style={styles.recenterButton}
-          onPress={() => {
-            if (currentEvent.latitude && currentEvent.longitude) {
-              mapRef.current?.animateToRegion({
-                latitude: currentEvent.latitude,
-                longitude: currentEvent.longitude,
-                latitudeDelta: 0.02,
-                longitudeDelta: 0.02,
-              }, 300);
-            }
-          }}
-        >
-          <Ionicons name="locate" size={20} color="#fff" />
-        </TouchableOpacity>
-      )}
+                }, 300);
+              }
+            }}
+          >
+            <Ionicons name="locate" size={20} color="#fff" />
+          </TouchableOpacity>
         </Animated.View>
       )}
     </View>
@@ -175,9 +155,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    width: 180, 
-    height: 180, 
-    borderRadius: 60, 
+    width: 180,
+    height: 180,
+    borderRadius: 60,
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: '#fff',
@@ -187,6 +167,9 @@ const styles = StyleSheet.create({
     elevation: 5,
     backgroundColor: '#eee',
   },
+  miniMapContainerExpanded: {
+    borderRadius: 0,
+  },
   miniMap: {
     flex: 1,
   },
@@ -195,25 +178,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#777',
   },
-  recenterButton: {
+  expandButton: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 8,
+    right: 8,
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 6,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  recenterButtonText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  miniMapContainerExpanded: {
-    width: '100%',
-    height: SCREEN_HEIGHT / 3,
-    top: 0,
-    right: 0,
-    borderRadius: 0,
+  recenterButton: {
+    position: 'absolute',
+    top: 50,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 6,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
