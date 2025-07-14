@@ -80,9 +80,28 @@ export default function HomeFeed() {
               latitudeDelta: 0.02,
               longitudeDelta: 0.02,
             }}
-            scrollEnabled={false}
-            zoomEnabled={false}
+            scrollEnabled={true}        // enable panning
+            zoomEnabled={true}          // enable pinch zoom
             rotateEnabled={false}
+            onRegionChangeComplete={(region) => {
+              // Clamp zoom levels
+              if (region.latitudeDelta > 0.05 || region.longitudeDelta > 0.05) {
+                mapRef.current?.animateToRegion({
+                  latitude: region.latitude,
+                  longitude: region.longitude,
+                  latitudeDelta: 0.05,
+                  longitudeDelta: 0.05,
+                });
+              }
+              if (region.latitudeDelta < 0.01 || region.longitudeDelta < 0.01) {
+                mapRef.current?.animateToRegion({
+                  latitude: region.latitude,
+                  longitude: region.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                });
+              }
+            }}
           >
             <Marker coordinate={{
               latitude: currentEvent.latitude,
@@ -100,9 +119,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    width: 180, // increased from 120
-    height: 180, // increased from 120
-    borderRadius: 60, // still circular for now
+    width: 180, 
+    height: 180, 
+    borderRadius: 60, 
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: '#fff',
