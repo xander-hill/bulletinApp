@@ -2,8 +2,10 @@ import EventCard from '@/components/EventCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -108,6 +110,23 @@ export default function HomeFeed() {
               longitude: currentEvent.longitude,
             }} />
           </MapView>
+          {currentEvent && (
+        <TouchableOpacity
+          style={styles.recenterButton}
+          onPress={() => {
+            if (currentEvent.latitude && currentEvent.longitude) {
+              mapRef.current?.animateToRegion({
+                latitude: currentEvent.latitude,
+                longitude: currentEvent.longitude,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
+              }, 300);
+            }
+          }}
+        >
+          <Ionicons name="locate" size={20} color="#fff" />
+        </TouchableOpacity>
+      )}
         </View>
       )}
     </View>
@@ -138,5 +157,19 @@ const styles = StyleSheet.create({
     marginTop: 40,
     textAlign: 'center',
     color: '#777',
+  },
+  recenterButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 6,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recenterButtonText: {
+    color: '#fff',
+    fontSize: 12,
   },
 });
