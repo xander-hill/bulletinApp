@@ -46,13 +46,16 @@ export default function EventItem({
         <Text style={styles.host}>Hosted by {hostName}</Text>
 
         <View style={styles.row}>
-          <Text style={styles.rsvp}>{rsvpCount} going</Text>
-          <View style={[styles.dateBadge, { backgroundColor: getDateBadgeColor() }]}>
-            <Text style={styles.dateBadgeText}>
-              {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            </Text>
-          </View>
+            <View style={styles.rsvpBadgeContainer}>
+                <Text style={styles.rsvp}>{rsvpCount} going</Text>
+                <View style={[styles.dateBadge, { backgroundColor: getDateBadgeColor() }]}>
+                <Text style={styles.dateBadgeText}>
+                    {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </Text>
+                </View>
+            </View>
         </View>
+
       </View>
 
       {/* Everything below: Full width, padded spacing */}
@@ -182,5 +185,10 @@ const styles = StyleSheet.create({
   mediaPlaceholderText: {
     color: '#999',
     fontSize: 14,
+  },
+  rsvpBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12, // or use marginLeft on dateBadge if gap not supported
   },
 });
