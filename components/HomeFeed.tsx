@@ -77,7 +77,7 @@ export default function HomeFeed() {
           <View style={{ height: SCREEN_HEIGHT - 100 }}>
             <EventItem
               title={item.title}
-              hostName={item.creator_id}
+              hostName={item.host_name}
               rsvpCount={item.rsvp_count}
               date={item.start_time}
               description={item.description}

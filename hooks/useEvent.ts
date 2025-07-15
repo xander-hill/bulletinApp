@@ -12,7 +12,7 @@ export function useEvent(eventId: string | null) {
     setLoading(true);
 
     supabase
-      .from('events_with_rsvp_counts')
+      .from('events_with_details')
       .select("*, creator:creator_id(username, full_name, avatar_url)")
       .eq("id", eventId)
       .single()

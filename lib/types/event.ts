@@ -12,4 +12,5 @@ export type Event = {
   rsvp_count: number;
   latitude: number | null;
   longitude: number | null;
+  host_name: string;
 };

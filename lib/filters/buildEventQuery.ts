@@ -3,7 +3,7 @@ import { EventFilters } from '../types/eventFilter';
 import { simpleFilters } from './filterFns';
 
 export function buildEventQuery(filters: EventFilters) {
-  let query = supabase.from('events_with_rsvp_counts').select('*');
+  let query = supabase.from('events_with_details').select('*');
 
   for (const apply of simpleFilters) {
     query = apply(query, filters);
