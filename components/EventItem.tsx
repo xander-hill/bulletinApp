@@ -1,14 +1,16 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export interface EventItemProps {
   title: string;
   hostName: string;
   rsvpCount: number;
-  date: string; // ISO string or readable date
+  date: string;
+  endTime: string;
+  location: string;
+  tags: string[];
   description: string;
   reserveMiniMapSpace?: boolean;
-  onPress?: () => void;
 }
 
 export default function EventItem({
@@ -16,102 +18,153 @@ export default function EventItem({
   hostName,
   rsvpCount,
   date,
+  endTime,
+  location,
+  tags,
   description,
   reserveMiniMapSpace = false,
-  onPress,
 }: EventItemProps) {
-  // You can adjust how to parse & color the date
   const getDateBadgeColor = () => {
     const eventDate = new Date(date);
     const now = new Date();
     const diff = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-    if (diff < 1) return '#FF3B30'; // today = red
-    if (diff < 2) return '#FF9500'; // tomorrow = orange
-    return '#34C759'; // future = green
+    if (diff < 1) return '#FF3B30';
+    if (diff < 2) return '#FF9500';
+    return '#34C759';
   };
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={onPress ? 0.7 : 1}
-      style={[
+    <ScrollView
+      contentContainerStyle={[
         styles.container,
         reserveMiniMapSpace && { paddingRight: 180 },
       ]}
     >
-      <View style={styles.headerRow}>
-        <Text style={styles.title} numberOfLines={2}>
-          {title}
-        </Text>
-        <View
-          style={[
-            styles.dateBadge,
-            { backgroundColor: getDateBadgeColor() },
-          ]}
-        >
+      <Text style={styles.title} numberOfLines={3}>{title}</Text>
+      <Text style={styles.host}>Hosted by {hostName}</Text>
+
+      <View style={styles.row}>
+        <Text style={styles.rsvp}>{rsvpCount} going</Text>
+        <View style={[styles.dateBadge, { backgroundColor: getDateBadgeColor() }]}>
           <Text style={styles.dateBadgeText}>
-            {new Date(date).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-            })}
+            {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </Text>
         </View>
       </View>
 
-      <Text style={styles.host}>Hosted by {hostName}</Text>
-      <Text style={styles.rsvp}>{rsvpCount} going</Text>
+      <Text style={styles.location}>📍 {location}</Text>
 
-      <Text style={styles.description} numberOfLines={3}>
-        {description}
-      </Text>
-    </TouchableOpacity>
+      {/* New lines for start and end times */}
+      <Text style={styles.timeText}>🕒 Starts at {new Date(date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text>
+      <Text style={styles.timeText}>🕒 Ends at {new Date(endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text>
+
+      {tags.length > 0 && (
+        <View style={styles.tagsContainer}>
+          {tags.map((tag, idx) => (
+            <View key={idx} style={styles.tagChip}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      <Text style={styles.sectionHeader}>Description</Text>
+      <Text style={styles.description}>{description}</Text>
+
+      <View style={styles.mediaPlaceholder}>
+        <Text style={styles.mediaPlaceholderText}>Media coming soon</Text>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    paddingBottom: 24,
+    padding: 24,
+    paddingTop: 36,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    flexGrow: 1,
   },
-  headerRow: {
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#111',
+    marginBottom: 10,
+  },
+  host: {
+    fontSize: 18,
+    color: '#444',
+    marginBottom: 10,
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 16,
   },
-  title: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111',
-    marginRight: 12,
+  rsvp: {
+    fontSize: 18,
+    color: '#007AFF',
   },
   dateBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
   },
   dateBadgeText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: '600',
   },
-  host: {
+  location: {
+    fontSize: 17,
+    color: '#333',
+    marginBottom: 6,
+  },
+  timeText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 4,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 12,
+  },
+  tagChip: {
+    backgroundColor: '#eee',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  tagText: {
     fontSize: 14,
     color: '#555',
-    marginBottom: 2,
   },
-  rsvp: {
-    fontSize: 14,
-    color: '#007AFF',
-    marginBottom: 8,
+  sectionHeader: {
+    fontSize: 19,
+    fontWeight: '600',
+    marginBottom: 6,
+    color: '#111',
   },
   description: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#333',
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 18,
+  },
+  mediaPlaceholder: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    backgroundColor: '#ddd',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mediaPlaceholderText: {
+    color: '#999',
+    fontSize: 14,
   },
 });

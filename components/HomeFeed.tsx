@@ -74,12 +74,15 @@ export default function HomeFeed() {
         data={events}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={{ height: SCREEN_HEIGHT - 100 }}>
+          <View style={{ height: SCREEN_HEIGHT - 90 }}>
             <EventItem
               title={item.title}
               hostName={item.host_name}
               rsvpCount={item.rsvp_count}
               date={item.start_time}
+              endTime={item.ends_at}
+              tags={item.tags}
+              location={item.location}
               description={item.description}
               reserveMiniMapSpace
             />

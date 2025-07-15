@@ -13,4 +13,5 @@ export type Event = {
   latitude: number | null;
   longitude: number | null;
   host_name: string;
+  ends_at: string;
 };
