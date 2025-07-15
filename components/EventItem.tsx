@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 export interface EventItemProps {
   title: string;
@@ -34,56 +34,73 @@ export default function EventItem({
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        reserveMiniMapSpace && { paddingRight: 180 },
-      ]}
+    <View
+        style={[
+            styles.container,
+            { flex: 1, width: '100%' },
+        ]}
     >
-      <Text style={styles.title} numberOfLines={3}>{title}</Text>
-      <Text style={styles.host}>Hosted by {hostName}</Text>
+      {/* Top Section: Title, Host, RSVP/Date */}
+      <View style={styles.topBlock}>
+        <Text style={styles.title} numberOfLines={3}>{title}</Text>
+        <Text style={styles.host}>Hosted by {hostName}</Text>
 
-      <View style={styles.row}>
-        <Text style={styles.rsvp}>{rsvpCount} going</Text>
-        <View style={[styles.dateBadge, { backgroundColor: getDateBadgeColor() }]}>
-          <Text style={styles.dateBadgeText}>
-            {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </Text>
+        <View style={styles.row}>
+          <Text style={styles.rsvp}>{rsvpCount} going</Text>
+          <View style={[styles.dateBadge, { backgroundColor: getDateBadgeColor() }]}>
+            <Text style={styles.dateBadgeText}>
+              {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </Text>
+          </View>
         </View>
       </View>
 
-      <Text style={styles.location}>📍 {location}</Text>
+      {/* Everything below: Full width, padded spacing */}
+      <View style={styles.section}>
+        <Text style={styles.location}>📍 {location}</Text>
+      </View>
 
-      {/* New lines for start and end times */}
-      <Text style={styles.timeText}>🕒 Starts at {new Date(date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text>
-      <Text style={styles.timeText}>🕒 Ends at {new Date(endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text>
+      <View style={styles.section}>
+        <Text style={styles.timeText}>🕒 Starts at {new Date(date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text>
+        <Text style={styles.timeText}>🕒 Ends at {new Date(endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text>
+      </View>
 
       {tags.length > 0 && (
-        <View style={styles.tagsContainer}>
-          {tags.map((tag, idx) => (
-            <View key={idx} style={styles.tagChip}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
+        <View style={styles.section}>
+          <View style={styles.tagsContainer}>
+            {tags.map((tag, idx) => (
+              <View key={idx} style={styles.tagChip}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       )}
 
-      <Text style={styles.sectionHeader}>Description</Text>
-      <Text style={styles.description}>{description}</Text>
-
-      <View style={styles.mediaPlaceholder}>
-        <Text style={styles.mediaPlaceholderText}>Media coming soon</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>Description</Text>
+        <Text style={styles.description}>{description}</Text>
       </View>
-    </ScrollView>
+
+      <View style={styles.section}>
+        <View style={styles.mediaPlaceholder}>
+          <Text style={styles.mediaPlaceholderText}>Media coming soon</Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     padding: 24,
-    paddingTop: 36,
     backgroundColor: '#fff',
     flexGrow: 1,
+  },
+  topBlock: {
+    minHeight: 180, // Match mini map collapsed height
+    justifyContent: 'center',
+    paddingBottom: 12,
   },
   title: {
     fontSize: 28,
@@ -100,7 +117,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
   },
   rsvp: {
     fontSize: 18,
@@ -116,10 +132,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  section: {
+    marginBottom: 18, // Consistent vertical spacing between sections
+  },
   location: {
     fontSize: 17,
     color: '#333',
-    marginBottom: 6,
   },
   timeText: {
     fontSize: 16,
@@ -129,7 +147,6 @@ const styles = StyleSheet.create({
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 12,
   },
   tagChip: {
     backgroundColor: '#eee',
@@ -153,7 +170,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     lineHeight: 22,
-    marginBottom: 18,
   },
   mediaPlaceholder: {
     width: '100%',
