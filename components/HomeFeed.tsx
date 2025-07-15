@@ -1,7 +1,6 @@
 // Updated HomeFeed with animation-based enlarge/shrink toggle using a dedicated button
 // while maintaining the recenter ('find me') button cleanly below it.
 
-import EventCard from '@/components/EventCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { Feather } from '@expo/vector-icons';
@@ -9,6 +8,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Dimensions, Easing, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import EventItem from './EventItem';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -74,8 +74,15 @@ export default function HomeFeed() {
         data={events}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={{ height: SCREEN_HEIGHT }}>
-            <EventCard item={item} />
+          <View style={{ height: SCREEN_HEIGHT - 100 }}>
+            <EventItem
+              title={item.title}
+              hostName={item.creator_id}
+              rsvpCount={item.rsvp_count}
+              date={item.start_time}
+              description={item.description}
+              reserveMiniMapSpace
+            />
           </View>
         )}
         onEndReached={fetchMore}
