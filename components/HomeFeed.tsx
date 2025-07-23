@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { Feather } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, Easing, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Easing, FlatList, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import EventItem from './EventItem';
@@ -69,12 +69,23 @@ export default function HomeFeed() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <ImageBackground
+      source={require('../assets/images/cork-texture.png')} // replace with your texture
+      style={{ flex: 1 }}
+      resizeMode="repeat" // or "cover" if you prefer
+    >
       <FlatList
         data={events}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={{ height: SCREEN_HEIGHT - 90 }}>
+          <View
+            style={{
+              height: SCREEN_HEIGHT * 0.85, // smaller height
+              width: SCREEN_WIDTH * 0.92, // smaller width
+              alignSelf: 'center', // center card horizontally
+              marginVertical: 10, // spacing for top/bottom cork visibility
+            }}
+          >
             <EventItem
               title={item.title}
               hostName={item.host_name}
@@ -156,7 +167,7 @@ export default function HomeFeed() {
           </TouchableOpacity>
         </Animated.View>
       )}
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -191,7 +202,7 @@ const styles = StyleSheet.create({
   expandButton: {
     position: 'absolute',
     top: 8,
-    right: 8,
+    right: 12,
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 6,
     borderRadius: 20,
@@ -200,8 +211,8 @@ const styles = StyleSheet.create({
   },
   recenterButton: {
     position: 'absolute',
-    top: 50,
-    right: 8,
+    top: 45,
+    right: 12,
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 6,
     borderRadius: 20,

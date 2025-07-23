@@ -34,12 +34,7 @@ export default function EventItem({
   };
 
   return (
-    <View
-        style={[
-            styles.container,
-            { flex: 1, width: '100%' },
-        ]}
-    >
+    <View style={styles.eventCard}>
       {/* Top Section: Title, Host, RSVP/Date */}
       <View style={styles.topBlock}>
         <Text style={styles.title} numberOfLines={3}>{title}</Text>
@@ -191,4 +186,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12, // or use marginLeft on dateBadge if gap not supported
   },
+  eventCard: {
+    backgroundColor: '#fffbe6', // pale post-it yellow
+    borderRadius: 8,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  }
 });

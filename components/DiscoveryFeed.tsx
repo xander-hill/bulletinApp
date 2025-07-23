@@ -26,8 +26,6 @@ export default function DiscoveryFeed() {
     })();
   }, []);
 
-
-
   const additionalFilters = useMemo(() => ({
     tags: selectedTags.length ? selectedTags : undefined,
     keyword: keyword || undefined,
