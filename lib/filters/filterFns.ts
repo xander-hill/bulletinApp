@@ -1,7 +1,8 @@
 import { FilterFn } from '../types/filterFunction';
 
 export const simpleFilters: FilterFn[] = [
-  (q, f) => (f.upcoming ? q.gte('start_time', new Date().toISOString()) : q),
+  // This filter uses the database's clock to reliably get future events.
+  (q, f) => (f.upcoming ? q.gte('start_time', 'now()') : q),
 
   (q, f) =>
     f.keyword

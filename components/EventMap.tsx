@@ -1,7 +1,3 @@
-// components/EventMap.tsx
-// Refactored to remove the basic Modal and extra buttons.
-// Now features a sliding panel from the bottom that renders our polished EventCard.
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { Event } from '@/lib/types/event';
@@ -14,52 +10,58 @@ import {
   Dimensions,
   StyleSheet,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import EventCard from './EventCard'; // Import our new master component
-
+import EventCard from './EventCard';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Default region (center of UMN campus)
+const defaultRegion = {
+  latitude: 44.9742,
+  longitude: -93.2354,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
+};
 
 export default function EventMap({ additionalFilters = {} }) {
   const { user } = useAuth();
   const mapRef = useRef<MapView | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  // --- FIX: State to control the map's region ---
+  const [currentRegion, setCurrentRegion] = useState(defaultRegion);
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
-  const { events, loading, refreshing, onRefresh } = useEvents({
+  const { events, refreshing, onRefresh } = useEvents({
     userId: user?.id,
     initialFilter: 'upcoming',
     additionalFilters,
   });
-  
-  // Animate sliding panel when an event is selected/deselected
+
+  // Effect to animate the sliding panel
   React.useEffect(() => {
-    if (selectedEvent) {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: SCREEN_HEIGHT,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
+    Animated.timing(slideAnim, {
+      toValue: selectedEvent ? 0 : SCREEN_HEIGHT,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   }, [selectedEvent]);
 
-  // Request location and center map
+  // --- FIX: Correctly fetches location and updates state ---
   React.useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
+      if (status !== 'granted') {
+        console.warn('Location permission denied.');
+        return;
+      }
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
-      const region = { latitude, longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 };
-      mapRef.current?.animateToRegion(region, 500);
+      const initialRegion = { latitude, longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+      
+      setCurrentRegion(initialRegion); // Update the state
+      mapRef.current?.animateToRegion(initialRegion, 500); // Animate the map
     })();
   }, []);
 
@@ -78,17 +80,21 @@ export default function EventMap({ additionalFilters = {} }) {
     if (status !== 'granted') return;
     const location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = location.coords;
-    mapRef.current?.animateToRegion({ latitude, longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 }, 500);
+    const userRegion = { latitude, longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+    setCurrentRegion(userRegion);
+    mapRef.current?.animateToRegion(userRegion, 500);
   };
   
   const eventsWithCoordinates = events.filter(e => e.latitude != null && e.longitude != null);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <MapView
         ref={mapRef}
-        style={{ flex: 1 }}
+        style={styles.map}
         showsUserLocation
+        region={currentRegion} // Map is controlled by state
+        onRegionChangeComplete={setCurrentRegion} // Update state on user pan/zoom
         onPress={() => setSelectedEvent(null)} // Deselect by tapping map
       >
         {eventsWithCoordinates.map((event) => (
@@ -109,7 +115,6 @@ export default function EventMap({ additionalFilters = {} }) {
         <Ionicons name="locate" size={24} color="#000" />
       </TouchableOpacity>
 
-      {/* Sliding Event Card Panel */}
       <Animated.View
         style={[
           styles.slidingPanel,
@@ -123,6 +128,12 @@ export default function EventMap({ additionalFilters = {} }) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
   button: {
     position: 'absolute',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -138,6 +149,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingBottom: 40, // Space for home indicator on iOS
+    paddingBottom: 40,
   },
 });

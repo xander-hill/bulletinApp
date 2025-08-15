@@ -1,36 +1,21 @@
 import { supabase } from '../supabase';
 import { Event } from '../types/event';
 import { EventFilters } from '../types/eventFilter';
-import { buildEventQuery } from './buildEventQuery';
 
-export async function fetchEventsWithFilters(filters: EventFilters, cursor?: string): Promise<Event[]> {
-  console.log("fetching events with filters: ", filters);
+export async function fetchEventsWithFilters(filters: EventFilters): Promise<Event[]> {
+  const { data, error } = await supabase
+    .rpc('get_filtered_events', {
+      sort_type: filters.sort,
+      user_lat: filters.userLat,
+      user_lng: filters.userLng,
+      search_keyword: filters.keyword,
+      filter_tags: filters.tags,
+    });
 
-  if (filters.rsvped && filters.userId) {
-    const { data: rsvps, error: rsvpError } = await supabase
-      .from('rsvps')
-      .select('event_id')
-      .eq('user_id', filters.userId)
-      .neq('status', 'not_going');
-
-    if (rsvpError) throw rsvpError;
-    const ids = rsvps?.map((r) => r.event_id) ?? [];
-    if (ids.length === 0) return [];
-
-    const query = buildEventQuery({ ...filters, rsvped: true }).in('id', ids);
-    if (cursor) query.lt('created_at', cursor);
-
-    const { data: eventsData, error } = await query;
-    if (error) throw error;
-
-    return eventsData ?? [];
+  if (error) {
+    console.error("Error calling get_filtered_events:", error);
+    throw error;
   }
 
-  const query = buildEventQuery(filters);
-  if (cursor) query.lt('start_time', cursor); 
-
-  const { data: eventsData, error } = await query;
-  if (error) throw error;
-
-  return eventsData ?? [];
+  return data ?? [];
 }

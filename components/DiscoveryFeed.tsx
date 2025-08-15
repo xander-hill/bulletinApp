@@ -1,4 +1,3 @@
-import * as Location from 'expo-location';
 import { useEffect, useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import DiscoveryFilterBar from './DiscoveryFilterBar';
@@ -14,16 +13,15 @@ export default function DiscoveryFeed() {
   const [userLng, setUserLng] = useState<number | undefined>(undefined);
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        console.warn('Location permission denied');
-        return;
-      }
-      const location = await Location.getCurrentPositionAsync({});
-      setUserLat(location.coords.latitude);
-      setUserLng(location.coords.longitude);
-    })();
+    // --- TEMPORARY FIX FOR TESTING ---
+    // Hardcode coordinates for University of Minnesota campus
+    const minneapolisCoords = {
+      latitude: 44.9742,
+      longitude: -93.2354,
+    };
+    setUserLat(minneapolisCoords.latitude);
+    setUserLng(minneapolisCoords.longitude);
+    // ---------------------------------
   }, []);
 
   const additionalFilters = useMemo(() => ({
