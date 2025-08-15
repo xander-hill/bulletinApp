@@ -2,11 +2,18 @@ import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
 
+// 1. Update the context type to include the signOut function
 const AuthContext = createContext<{
   session: Session | null;
   user: User | null;
   loading: boolean;
-}>({ session: null, user: null, loading: true });
+  signOut: () => Promise<void>; // Add this line
+}>({ 
+  session: null, 
+  user: null, 
+  loading: true,
+  signOut: async () => {}, // Provide a default empty function
+});
 
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -37,8 +44,14 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  // 2. Define the signOut function
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, loading }}>
+    // 3. Add signOut to the provider's value
+    <AuthContext.Provider value={{ session, user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

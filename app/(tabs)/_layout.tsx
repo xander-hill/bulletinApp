@@ -39,27 +39,27 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
-      />
-      <Tabs.Screen
+      /> */}
+      {/* <Tabs.Screen
         name="createEvent"
         options={{
           title: 'Create Event',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus.circle.fill" color={color} />, 
         }}
-      />
-      <Tabs.Screen
+      /> */}
+      {/* <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="magnifyingglass" color={color} />, 
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="profile"
         options={{

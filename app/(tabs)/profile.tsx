@@ -1,130 +1,149 @@
-import ProfileFeed from '@/components/ProfileFeed';
-import { supabase } from '@/lib/supabase';
+// app/(tabs)/profile.tsx
+
+import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/contexts/AuthContext';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Alert, Button, Image, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useProfile } from '../../hooks/useProfile';
+import React, { useState } from 'react';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function ProfileScreen() {
+  const { user, signOut } = useAuth();
   const router = useRouter();
-  const { profile, loading } = useProfile();
+  const colorScheme = useColorScheme();
 
-  if (loading) return <Text>Loading...</Text>;
-  if (!profile) return <Text>No profile found.</Text>;
+  // Dummy state for toggles
+  const [eventReminders, setEventReminders] = useState(true);
+  const [newFollowers, setNewFollowers] = useState(false);
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      Alert.alert('Error signing out', error.message);
-    } else {
-      router.replace('/signin');
-    }
-  };
+  const styles = getStyles(colorScheme);
 
-  console.log('Profile avatar_url:', profile.avatar_url);
-
+  const appVersion = Constants.expoConfig?.version;
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      {/* Profile Header */}
-      <View style={{ alignItems: 'center', marginBottom: 20 }}>
-        {profile.avatar_url ? (
-          <Image
-            source={{ uri: profile.avatar_url }}
-            style={{ width: 100, height: 100, borderRadius: 50 }}
-            resizeMode="cover"
-            onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+    <ScrollView style={styles.container}>
+      {/* --- Account Section --- */}
+      <Text style={styles.sectionTitle}>Account</Text>
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.row} onPress={() => router.push('/edit-profile')}>
+          <Text style={styles.rowLabel}>Edit Profile</Text>
+          <Ionicons name="chevron-forward" size={22} color={Colors.light.gray} />
+        </TouchableOpacity>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Email</Text>
+          <Text style={styles.rowValue}>{user?.email}</Text>
+        </View>
+      </View>
+
+      {/* --- Notifications Section --- */}
+      <Text style={styles.sectionTitle}>Notifications</Text>
+      <View style={styles.section}>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Event Reminders</Text>
+          <Switch
+            value={eventReminders}
+            onValueChange={setEventReminders}
+            trackColor={{ false: '#767577', true: Colors.light.tint }}
           />
-        ) : (
-          <View
-            style={{
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: '#ccc',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 32 }}>{profile.username[0].toUpperCase()}</Text>
-          </View>
-        )}
-        <Text style={{ fontSize: 24, fontWeight: 'bold', marginTop: 10 }}>
-          {profile.username}
-        </Text>
-        {profile.full_name && (
-          <Text style={{ fontSize: 16, color: '#555' }}>{profile.full_name}</Text>
-        )}
-        {profile.bio && (
-          <Text style={{ fontSize: 14, color: '#333', marginTop: 10, textAlign: 'center' }}>
-            {profile.bio}
-          </Text>
-        )}
-        {profile.interests && profile.interests.length > 0 && (
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              marginTop: 10,
-            }}
-          >
-            {profile.interests.map((interest) => (
-              <View
-                key={interest}
-                style={{
-                  backgroundColor: '#e0e0e0',
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
-                  borderRadius: 15,
-                  margin: 4,
-                }}
-              >
-                <Text style={{ fontSize: 12 }}>{interest}</Text>
-              </View>
-            ))}
-          </View>
-        )}
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>New Followers</Text>
+          <Switch value={newFollowers} onValueChange={setNewFollowers} />
+        </View>
       </View>
 
-      {/* Followers / Following */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 }}>
-        <TouchableOpacity onPress={() => router.push('/followers')}>
-          <Text style={{ fontSize: 16 }}>
-            Followers: {profile.follower_count ?? 0}
-          </Text>
+      {/* --- Support Section --- */}
+      <Text style={styles.sectionTitle}>Support</Text>
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.row} onPress={() => { /* Link to Privacy Policy */ }}>
+          <Text style={styles.rowLabel}>Privacy Policy</Text>
+          <Ionicons name="chevron-forward" size={22} color={Colors.light.gray} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/following')}>
-          <Text style={{ fontSize: 16 }}>
-            Following: {profile.following_count ?? 0}
-          </Text>
+        <TouchableOpacity style={styles.row} onPress={() => { /* Link to Terms */ }}>
+          <Text style={styles.rowLabel}>Terms of Service</Text>
+          <Ionicons name="chevron-forward" size={22} color={Colors.light.gray} />
         </TouchableOpacity>
       </View>
 
-      {/* Edit Profile Button */}
-      <TouchableOpacity
-        onPress={() => router.push('/edit-profile')}
-        style={{
-          backgroundColor: '#4CAF50',
-          padding: 12,
-          borderRadius: 8,
-          alignItems: 'center',
-          marginBottom: 20,
-        }}
-      >
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>Edit Profile</Text>
+      {/* --- Logout & App Info --- */}
+      <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+        <Text style={styles.logoutButtonText}>Log Out</Text>
       </TouchableOpacity>
 
-      {/* Sign Out Button */}
-      <View style={{ marginVertical: 20 }}>
-        <Button title="Sign Out" onPress={handleSignOut} color="#f44336" />
-      </View>
-
-      <ProfileFeed
-        userId={profile.id}
-      />
-    </SafeAreaView>
+      <Text style={styles.appInfo}>
+        Version {appVersion}
+      </Text>
+    </ScrollView>
   );
 }
+
+const getStyles = (colorScheme: 'light' | 'dark' | null) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 16,
+      paddingTop: Platform.OS === 'android' ? 40 : 20,
+      backgroundColor: Colors[colorScheme ?? 'light'].background,
+    },
+    section: {
+      backgroundColor: Colors[colorScheme ?? 'light'].card,
+      borderRadius: 12,
+      marginBottom: 24,
+      overflow: 'hidden',
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: Colors.light.gray,
+      textTransform: 'uppercase',
+      marginBottom: 8,
+      marginLeft: 4,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: Colors[colorScheme ?? 'light'].borderColor,
+    },
+    rowLabel: {
+      fontSize: 16,
+      color: Colors[colorScheme ?? 'light'].text,
+    },
+    rowValue: {
+      fontSize: 16,
+      color: Colors.light.gray,
+    },
+    logoutButton: {
+      backgroundColor: Colors.light.tint,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+      marginTop: 20,
+    },
+    logoutButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    appInfo: {
+      textAlign: 'center',
+      marginTop: 20,
+      marginBottom: 40,
+      color: Colors.light.gray,
+      fontSize: 12,
+    },
+  });
 

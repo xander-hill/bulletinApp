@@ -1,15 +1,13 @@
+// components/EventFeed.tsx
+// Simplified to use our new master EventCard component for a consistent look.
+
+import EventCard from '@/components/EventCard'; // Import our new master component
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
-import { EventFeedProps } from '@/lib/types/eventFeedProps';
+import React from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
-import EventCard from './EventCard';
 
-export default function EventFeed({
-  headerTitle = "Events",
-  userId,
-  initialFilter,
-  additionalFilters = {}, // for discovery or advanced filtering
-}: EventFeedProps) {
+export default function EventFeed({ additionalFilters = {} }) {
   const { user } = useAuth();
 
   const {
@@ -19,48 +17,35 @@ export default function EventFeed({
     fetchMore,
     onRefresh,
   } = useEvents({
-    userId: userId ?? user?.id,
-    initialFilter,
+    userId: user?.id,
+    initialFilter: 'upcoming',
     additionalFilters,
   });
 
-  const renderHeader = () => (
-    <View style={{ padding: 16 }}>
-      <Text style={styles.title}>{headerTitle}</Text>
-    </View>
-  );
-
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <FlatList
         data={events}
         keyExtractor={(item) => item.id}
-        renderItem={EventCard}
+        renderItem={({ item }) => <EventCard event={item} />} // Use the new EventCard
         onEndReached={fetchMore}
-        onEndReachedThreshold={0.4}
+        onEndReachedThreshold={0.5}
         refreshing={refreshing}
         onRefresh={onRefresh}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={<Text style={styles.header}>Discover Events</Text>}
         ListFooterComponent={loading ? <ActivityIndicator size="large" /> : null}
         ListEmptyComponent={
           !loading && !refreshing ? (
             <Text style={styles.emptyText}>No events to show.</Text>
           ) : null
         }
-        contentContainerStyle={styles.container}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { paddingBottom: 16, backgroundColor: '#fff' },
-  title: { fontSize: 18, fontWeight: 'bold' },
-  emptyText: {
-    marginTop: 40,
-    textAlign: 'center',
-    color: '#777',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  header: { fontSize: 24, fontWeight: 'bold', padding: 16, backgroundColor: '#fff' },
+  emptyText: { marginTop: 40, textAlign: 'center', color: '#777' },
 });
-
-
