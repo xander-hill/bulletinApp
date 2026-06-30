@@ -11,7 +11,9 @@ serve(async (req) => {
 
   // Set up Supabase client
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
+  console.log("URL:", supabaseUrl);
+  console.log("KEY exists:", !!serviceRoleKey);
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   // Authenticate user from access token
@@ -22,7 +24,10 @@ serve(async (req) => {
     return new Response("Missing token", { status: 401 });
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(token);
   if (userError || !user) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -51,28 +56,31 @@ serve(async (req) => {
     }
 
     // Normalize location
-    const finalLocation = location_type === "online"
-      ? "Online"
-      : location?.trim() || "TBD";
+    const finalLocation =
+      location_type === "online" ? "Online" : location?.trim() || "TBD";
 
     // Insert event with latitude & longitude
-    const { error } = await supabase
-      .from("events")
-      .insert({
-        id: eventId,
-        creator_id: user.id,
-        title,
-        description,
-        location_type,
-        location: finalLocation,
-        start_time,
-        ends_at,
-        is_public,
-        tags,
-        latitude,
-        longitude,
-        geom: latitude && longitude ? `SRID=4326;POINT(${longitude} ${latitude})` : null,
-      });
+    const { error } = await supabase.from("events").insert({
+      id: eventId,
+      creator_id: user.id,
+      title,
+      description,
+      location_type,
+      location: finalLocation,
+      start_time,
+      ends_at,
+      is_public,
+      tags,
+      latitude,
+      longitude,
+      geom:
+        latitude && longitude
+          ? {
+              type: "Point",
+              coordinates: [longitude, latitude],
+            }
+          : null,
+    });
 
     if (error) {
       console.error("Error inserting event:", error);
@@ -83,11 +91,8 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json" },
       status: 200,
     });
-
   } catch (err) {
     console.error("Error:", err);
     return new Response("Invalid request", { status: 400 });
   }
-
 });
-
