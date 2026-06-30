@@ -1,50 +1,261 @@
-# Welcome to your Expo app 👋
+# Bulletin App (MVP)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile-first event discovery and social coordination app built with React Native (Expo) and Supabase.
 
-## Get started
+The focus is on fast event browsing, composable filtering, RSVP tracking, and scalable feed generation.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## 🚀 Overview
 
-2. Start the app
+Bulletin enables users to:
 
-   ```bash
-   npx expo start
-   ```
+- Create and browse events
+- RSVP and track attendance
+- View personalized feeds (upcoming, my events, RSVP’d events)
+- Search events by keyword and tags
+- Discover events with infinite scroll
 
-In the output, you'll find options to open the app in a
+The system is built around a composable query pipeline using Supabase.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🧱 Tech Stack
 
-## Get a fresh project
+- Frontend: React Native (Expo), TypeScript
+- Backend: Supabase (Postgres, Auth, RPC)
+- State: React hooks (custom data hooks)
+- Query Architecture: Functional filter pipeline
+- Pagination: Cursor-based (created_at / start_time)
+- Geo Sorting: Postgres RPC (`get_events_sorted_by_distance`)
 
-When you're ready, run:
+---
 
-```bash
-npm run reset-project
-```
+## 🧠 Architecture
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+UI → useEvents → fetchEventsWithFilters → buildEventQuery → Supabase
 
-## Learn more
+Design goals:
 
-To learn more about developing your project with Expo, look at the following resources:
+- Keep UI declarative
+- Centralize query logic
+- Make filters reusable
+- Push complexity to backend-friendly layer
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## 📦 Data Flow
 
-Join our community of developers creating universal apps.
+### UI Layer
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+const { events, fetchMore, onRefresh, setFilterType } = useEvents({
+userId,
+initialFilter: "upcoming",
+additionalFilters: {}
+});
+
+---
+
+### useEvents Hook
+
+Responsible for:
+
+- Event state management
+- Loading / refreshing states
+- Infinite scroll pagination
+- Filter switching
+- Cursor tracking
+
+Key behaviors:
+
+- Upcoming uses start_time cursor
+- Other feeds use created_at cursor
+- Auto refresh triggers when filters change
+
+---
+
+### Fetch Layer
+
+fetchEventsWithFilters(filters, cursor?)
+
+Responsibilities:
+
+- Handles RSVP-specific query path
+- Delegates query building
+- Applies pagination cursor
+- Deduplicates results
+
+---
+
+### Query Builder
+
+buildEventQuery(filters)
+
+Uses a functional filter pipeline:
+
+- upcoming filter
+- keyword search
+- tag matching
+- creator filtering
+
+Each filter is a pure function:
+
+(q, f) =>
+f.upcoming
+? q.gte("start_time", new Date().toISOString())
+: q
+
+---
+
+## 🔍 Filtering System
+
+### EventFilters
+
+type EventFilters = {
+keyword?: string;
+tags?: string[];
+upcoming?: boolean;
+userId?: string;
+rsvped?: boolean;
+sort?: "newest" | "upcoming" | "popular" | "closest";
+userLat?: number;
+userLng?: number;
+};
+
+---
+
+### Filter Types
+
+type FilterType = "upcoming" | "my" | "rsvped";
+
+Maps:
+
+- upcoming → future events
+- my → events created by user
+- rsvped → events user is attending
+
+---
+
+## ⚙️ RSVP Logic
+
+When rsvped = true:
+
+1. Query RSVP table for event IDs
+2. Filter events using .in("id", ids)
+3. Apply normal event query pipeline
+
+No joins required → keeps queries simple and fast.
+
+---
+
+## 🌍 Geo Sorting
+
+If sort = "closest":
+
+get_events_sorted_by_distance(user_lat, user_lng)
+
+Handled via Postgres RPC for performance.
+
+---
+
+## 🔁 Pagination Strategy
+
+Cursor-based pagination:
+
+- Upcoming → start_time
+- Other feeds → created_at
+
+query.lt("start_time", cursor)
+
+Benefits:
+
+- No duplicates
+- Stable ordering
+- Infinite scroll safe
+
+---
+
+## 🧩 Filter Pipeline
+
+export const simpleFilters = [
+(q, f) => (f.upcoming ? q.gte("start_time", new Date().toISOString()) : q),
+
+(q, f) =>
+f.keyword
+? q.or(
+`title.ilike.%${f.keyword}%,description.ilike.%${f.keyword}%,location.ilike.%${f.keyword}%`
+)
+: q,
+
+(q, f) => (f.tags?.length ? q.overlaps("tags", f.tags) : q),
+
+(q, f) => (f.userId && !f.rsvped ? q.eq("creator_id", f.userId) : q),
+];
+
+---
+
+## 📊 Design Decisions
+
+Functional Query Composition:
+Filters are pure functions applied sequentially.
+
+Hybrid Pagination Keys:
+
+- start_time for discovery feeds
+- created_at for general feeds
+
+Supabase-Centric Architecture:
+
+- Uses views (events_with_details)
+- Uses RPC for geo sorting
+- Minimal client-side joins
+
+RSVP Separation:
+RSVP queries are isolated for simplicity and performance.
+
+---
+
+## 📱 Features
+
+- Event feed with infinite scroll
+- Keyword + tag search
+- RSVP system
+- User-specific feeds
+- Geo-based sorting
+- Profile-based filtering
+
+---
+
+## 🧪 Example Usage
+
+const { events, fetchMore } = useEvents({
+userId: "123",
+initialFilter: "upcoming",
+additionalFilters: {
+tags: ["tech", "music"],
+keyword: "hackathon",
+sort: "popular"
+}
+});
+
+---
+
+## 🧭 Philosophy
+
+Keep UI simple. Push complexity into composable query logic.
+
+- UI → declarative
+- Filters → functional pipeline
+- Supabase → source of truth
+- Pagination → cursor-based
+- Geo → database-level computation
+
+---
+
+## 📌 Future Improvements
+
+- Postgres full-text search (replace ilike)
+- Materialized views for trending feeds
+- Redis caching layer for hot events
+- Real-time RSVP updates
+- Recommendation / ranking system
